@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="xyz.thingummy.oss.model.SpecificationTest" tests="1" skipped="0" failures="0" errors="0" timestamp="2023-11-04T12:29:18" hostname="Reykjavik" time="0.014">
+  <properties/>
+  <testcase name="test_differer()" classname="xyz.thingummy.oss.model.SpecificationTest" time="0.014"/>
+  <system-out><![CDATA[]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>
