@@ -26,32 +26,57 @@ package xyz.thingummy.oss.commons.notification;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.function.BooleanSupplier;
 
 /**
- * Représente un ensemble de notifications pouvant résulter d'un processus de validation.
+ * Représente un ensemble de notifications pouvant résulter d'un processus quelconque,
+ * par exemple un processus de validation.
  */
 public class CollecteurNotifications {
 
-    private final List<EnregistrementNotification<?, ?>> entries = new ArrayList<>();
+    private final List<Notification<?, ?>> entries = new ArrayList<>();
 
     /**
      * Ajoute une entrée de notification au collecteur.
      *
-     * @param notification La notification à ajouter.
-     * @param source       La source qui a généré la notification.
-     * @param reference    L'objet qui était en cours d'évaluation.
+     * @param message   Le message associé à la notification à ajouter.
+     * @param source    La source qui a généré la notification.
+     * @param reference L'objet qui était en cours d'évaluation.
+     * @param <T>       Le type de l'objet de référence.
+     * @param <S>       Le type de la source de la notification.
      */
-    public <T, S> void ajouter(Notification notification, S source, T reference) {
-        entries.add(new EnregistrementNotification<>(notification, source, reference));
+    public <T, S> void ajouter(Message message, S source, T reference) {
+        ajouter(true, message, source, reference);
     }
 
     /**
-     * Récupère une liste non modifiable de toutes les entrées de notification collectées.
+     * Ajoute une entrée de notification au collecteur si la condition est vraie.
      *
-     * @return Une liste non modifiable d'entrées de notification.
+     * @param condition La condition déterminant si la notification doit être ajoutée.
+     * @param message   Le message associé à la notification à ajouter.
+     * @param source    La source qui a généré la notification.
+     * @param reference L'objet qui était en cours d'évaluation.
+     * @param <T>       Le type de l'objet de référence.
+     * @param <S>       Le type de la source de la notification.
      */
-    List<EnregistrementNotification<?, ?>> getEntries() {
-        return Collections.unmodifiableList(entries);
+    public <T, S> void ajouter(boolean condition, Message message, S source, T reference) {
+        if (condition && null != message) {
+            entries.add(new Notification<>(message, source, reference));
+        }
+    }
+
+    /**
+     * Ajoute une entrée de notification au collecteur si la condition fournie est vraie.
+     *
+     * @param condition Un fournisseur de condition qui doit être évalué.
+     * @param message   Le message associé à la notification à ajouter.
+     * @param source    La source qui a généré la notification.
+     * @param reference L'objet qui était en cours d'évaluation.
+     * @param <T>       Le type de l'objet de référence.
+     * @param <S>       Le type de la source de la notification.
+     */
+    public <T, S> void ajouter(BooleanSupplier condition, Message message, S source, T reference) {
+        ajouter(!condition.getAsBoolean(), message, source, reference);
     }
 
     /**
@@ -69,9 +94,21 @@ public class CollecteurNotifications {
     public void vider() {
         entries.clear();
     }
+
+    public void ajouterTout(boolean res, CollecteurNotifications c1) {
+        ajouter(res, c1.getEntries());
+    }
+
+    private void ajouter(boolean res, List<Notification<?, ?>> entries) {
+        this.entries.addAll(entries);
+    }
+
+    /**
+     * Récupère une liste non modifiable de toutes les entrées de notification collectées.
+     *
+     * @return Une liste non modifiable d'entrées de notification.
+     */
+    public List<Notification<?, ?>> getEntries() {
+        return Collections.unmodifiableList(entries);
+    }
 }
-
-
-
-
-

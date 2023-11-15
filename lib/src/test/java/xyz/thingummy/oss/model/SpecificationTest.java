@@ -1,134 +1,160 @@
-/*
- * Copyright (c) 2023, Jérôme ROBERT
- *
- * Permission is hereby granted, free of charge, to any person obtaining a copy of
- *   this software and associated documentation files (the “Software”), to deal in the
- *   Software without restriction, including without limitation the rights to use, copy,
- *   modify, merge, publish, distribute, sublicense, and/or sell copies of the
- *   Software, and to permit persons to whom the Software is furnished to do so,
- *    subject to the following conditions:
- *
- * The above copyright notice and this permission notice shall be included in all
- *    copies or substantial portions of the Software.
- *
- * THE SOFTWARE IS PROVIDED “AS IS”, WITHOUT WARRANTY OF ANY KIND,
- *    EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
- *    MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
- *    NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT
- *    HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
- *    WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
- *    FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
- *    OTHER DEALINGS IN THE SOFTWARE.
- *
- */
-
 package xyz.thingummy.oss.model;
 
 import org.junit.jupiter.api.Test;
+import xyz.thingummy.oss.commons.notification.Message;
+import xyz.thingummy.oss.commons.notification.TypeMessage;
 import xyz.thingummy.oss.model.specification.Specification;
 
-import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertTrue;
-import static xyz.thingummy.oss.model.specification.Specification.*;
+import static org.junit.jupiter.api.Assertions.*;
 
-/**
- * Tests de la classe Specification
- */
 class SpecificationTest {
-
     /**
-     * Cette spécification permet de tester si un nombre est pair.
-     */
-    private final Specification<Integer> estPair = i -> i % 2 == 0;
-
-    /**
-     * Cette spécification permet de tester si un nombre est impair.
-     * Elle est construite par la négation de la précédente.
-     */
-    private final Specification<Integer> estImpair = non(estPair);
-
-    /**
-     * Cette spécification permet de tester si un nombre est supérieur à 10.
-     */
-    private final Specification<Integer> estSuperieurADix = i -> i > 10;
-
-    /**
-     * Teste le comportement de la methode estSatisfaitePar avec la spécification estPair.
+     * Teste la méthode estSatisfaitePar.
+     * Vérifie si la spécification est correctement évaluée pour différentes chaînes de caractères.
      */
     @Test
     void test_EstSatisfaitePar() {
-        assertFalse(estPair.estSatisfaitePar(1));
-        assertTrue(estPair.estSatisfaitePar(2));
+        Specification<String> contientPlusDeTroisCaracteres = s -> s.length() > 3;
+        assertTrue(contientPlusDeTroisCaracteres.estSatisfaitePar("Test"));
+        assertFalse(contientPlusDeTroisCaracteres.estSatisfaitePar("oui"));
     }
 
     /**
-     * Teste la methode et : conjonction de spécifications.
+     * Teste la méthode et.
+     * Vérifie que la spécification combinée est satisfaite uniquement lorsque les deux prédicats sont vrais.
      */
     @Test
     void test_Et() {
-        final Specification<Integer> estPairEtSupperieurADix = estPair.et(estSuperieurADix);
-        assertFalse(estPairEtSupperieurADix.estSatisfaitePar(2));
-        assertTrue(estPairEtSupperieurADix.estSatisfaitePar(12));
+        Specification<String> contientPetitA = s -> s.contains("a");
+        Specification<String> contientPlusDeTroisCaracteres = s -> s.length() > 3;
+
+        Specification<String> motValide = contientPetitA.et(contientPlusDeTroisCaracteres);
+
+        assertTrue(motValide.estSatisfaitePar("abracadabra"));
+        assertFalse(motValide.estSatisfaitePar("act"));
+        assertFalse(motValide.estSatisfaitePar("hello"));
     }
 
     /**
-     * Teste la méthode ou : disjunction de spécifications.
+     * Teste la méthode ou.
+     * Vérifie que la spécification combinée est satisfaite si au moins l'un des prédicats est vrai.
      */
     @Test
     void test_Ou() {
-        final Specification<Integer> estPairOuSupperieurADix = estPair.ou(estSuperieurADix);
-        assertFalse(estPairOuSupperieurADix.estSatisfaitePar(9));
-        assertTrue(estPairOuSupperieurADix.estSatisfaitePar(2));
-        assertTrue(estPairOuSupperieurADix.estSatisfaitePar(11));
+        Specification<String> contientPetitA = s -> s.contains("a");
+        Specification<String> contientPlusDeCinqCaracteres = s -> s.length() > 5;
+
+        Specification<String> motValide = contientPetitA.ou(contientPlusDeCinqCaracteres);
+
+        assertTrue(motValide.estSatisfaitePar("abracadabra"));
+        assertTrue(motValide.estSatisfaitePar("act"));
+        assertFalse(motValide.estSatisfaitePar("hello"));
     }
 
     /**
-     * Teste "l'opérateur" et : conjonction de spécifications.
+     * Teste la méthode et avec plusieurs prédicats.
+     * Vérifie que la spécification combinée est satisfaite uniquement lorsque tous les prédicats fournis sont vrais.
+     * Ce test couvre le cas où plusieurs prédicats sont combinés en utilisant l'opération logique ET.
      */
     @Test
-    void test_OperateurEt() {
-        final Specification<Integer> estPairEtSupperieurADix = et(estPair, estSuperieurADix);
-        assertFalse(estPairEtSupperieurADix.estSatisfaitePar(2));
-        assertTrue(estPairEtSupperieurADix.estSatisfaitePar(12));
+    void test_Et_MultiplePredicates() {
+        Specification<String> motValide = Specification.et(
+                s -> s.contains("b"),
+                s -> s.length() > 3,
+                s -> s.startsWith("a")
+        );
+
+        assertTrue(motValide.estSatisfaitePar("abracadabra"));
+        assertFalse(motValide.estSatisfaitePar("abc"));
+        assertFalse(motValide.estSatisfaitePar("hello"));
+        assertFalse(motValide.estSatisfaitePar("bravo"));
     }
 
     /**
-     * Teste "l'opérateur" ou : disjunction de spécifications. "
+     * Teste la méthode ou avec plusieurs prédicats.
+     * Vérifie que la spécification combinée est satisfaite si au moins l'un des prédicats fournis est vrai.
+     * Ce test illustre la combinaison de plusieurs prédicats en utilisant l'opération logique OU.
      */
     @Test
-    void test_OperateurOu() {
-        final Specification<Integer> estPairOuSupperieurADix = ou(estPair, estSuperieurADix);
-        assertFalse(estPairOuSupperieurADix.estSatisfaitePar(9));
-        assertTrue(estPairOuSupperieurADix.estSatisfaitePar(2));
-        assertTrue(estPairOuSupperieurADix.estSatisfaitePar(11));
+    void test_Ou_MultiplePredicates() {
+        Specification<String> motValide = Specification.ou(
+                s -> s.contains("a"),
+                s -> s.length() > 5,
+                s -> s.endsWith("z")
+        );
+
+        assertTrue(motValide.estSatisfaitePar("abracadabra"));
+        assertTrue(motValide.estSatisfaitePar("act"));
+        assertTrue(motValide.estSatisfaitePar("jazz"));
+        assertFalse(motValide.estSatisfaitePar("hello"));
     }
 
     /**
-     * Teste "l'opérateur" non : négation d'une spécification.
+     * Teste la méthode etNon.
+     * Vérifie que la spécification combinée est satisfaite lorsque la première spécification est vraie et la seconde fausse.
      */
     @Test
-    void test_OperateurNon() {
-        assertTrue(estImpair.estSatisfaitePar(1));
-        assertFalse(estImpair.estSatisfaitePar(2));
+    void test_EtNon() {
+        Specification<String> spec1 = s -> s.contains("a");
+        Specification<String> spec2 = s -> s.length() > 5;
+
+        Specification<String> combinedSpec = spec1.etNon(spec2);
+
+        assertTrue(combinedSpec.estSatisfaitePar("act"));
+        assertFalse(combinedSpec.estSatisfaitePar("abracadabra"));
+        assertFalse(combinedSpec.estSatisfaitePar("hello"));
     }
 
     /**
-     * Teste "l'opérateur" ouEx : disjonction exclusive de spécifications.
+     * Teste la méthode ouX (OU exclusif).
+     * Vérifie que la spécification combinée est satisfaite lorsque exactement l'un des prédicats est vrai.
      */
     @Test
-    void test_OuEx() {
-        final Specification<Integer> estPairOuXSupperieurADix = estPair.ouEx(estSuperieurADix);
-        assertFalse(estPairOuXSupperieurADix.estSatisfaitePar(9));
-        assertTrue(estPairOuXSupperieurADix.estSatisfaitePar(2));
-        assertTrue(estPairOuXSupperieurADix.estSatisfaitePar(11));
-        assertFalse(estPairOuXSupperieurADix.estSatisfaitePar(12));
+    void test_OuX() {
+        Specification<String> spec1 = s -> s.contains("a");
+        Specification<String> spec2 = s -> s.length() > 4;
+
+        Specification<String> combinedSpec = spec1.ouX(spec2);
+
+        assertTrue(combinedSpec.estSatisfaitePar("act"));
+        assertTrue(combinedSpec.estSatisfaitePar("hello"));
+        assertFalse(combinedSpec.estSatisfaitePar("abracadabra"));
+        assertFalse(combinedSpec.estSatisfaitePar("oui"));
     }
 
+    /**
+     * Teste les méthodes statiques soit, pas et non.
+     * Vérifie que ces méthodes créent des spécifications qui se comportent comme prévu.
+     */
     @Test
-    void test_differer() {
-        Specification<Void> differee = estPair.differer(2);
-        assertTrue(differee.estSatisfaitePar(null));
+    void test_MethodesStatiques() {
+        Specification<String> specSoit = Specification.soit(s -> s.contains("a"));
+        Specification<String> specPas = Specification.pas(s -> s.contains("a"));
+        Specification<String> specNon = Specification.non(s -> s.contains("a"));
 
+        assertTrue(specSoit.estSatisfaitePar("apple"));
+        assertFalse(specPas.estSatisfaitePar("apple"));
+        assertFalse(specNon.estSatisfaitePar("apple"));
+
+        assertFalse(specSoit.estSatisfaitePar("hello"));
+        assertTrue(specPas.estSatisfaitePar("hello"));
+        assertTrue(specNon.estSatisfaitePar("hello"));
     }
+
+    /**
+     * Teste la méthode avec.
+     * Vérifie que le message est correctement associé à la spécification et est récupérable.
+     */
+    @Test
+    void test_Avec() {
+        Message messageTest = Message.of("critere.ko", "Critère non satisfait", TypeMessage.ERREUR);
+        Specification<String> spec = s -> s.length() > 3;
+        Specification<String> specAvecMessage = spec.avec(messageTest);
+
+        assertEquals(messageTest, specAvecMessage.getMessage());
+        assertTrue(specAvecMessage.estSatisfaitePar("Test"));
+        assertFalse(specAvecMessage.estSatisfaitePar("oui"));
+    }
+
 
 }

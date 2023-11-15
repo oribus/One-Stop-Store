@@ -24,150 +24,178 @@
 
 package xyz.thingummy.oss.model.specification;
 
+import lombok.AllArgsConstructor;
+import lombok.Getter;
+import lombok.NonNull;
+import xyz.thingummy.oss.commons.notification.CollecteurNotifications;
+import xyz.thingummy.oss.commons.notification.Message;
+
 import java.util.Arrays;
 import java.util.function.Function;
 import java.util.function.Predicate;
 
 /**
- * Interface Specification - représente une spécification dans le contexte de la conception pilotée par le domaine (DDD).
+ * Interface Specification - représente une spécification selon acception du terme dans le contexte du
+ * Design (conception) Dirigé par le Domaine (DDD Domain Driven Design).
  * C'est une extension fonctionnelle de l'interface Predicat qui permet de construire des règles métier complexes
  * de manière expressive et lisible. Elle fournit des méthodes pour composer des spécifications à l'aide d'opérations
- * logiques telles que ET, OU et NON.
+ * logiques telles que ET, OU et NON et est adaptée aux locuteurs de langue française.
  *
- * @param <T> le type de l'entité sur laquelle la spécification est évaluée
+ * @param <T> le type de l'objet sur lequel la spécification est évaluée
  */
 @FunctionalInterface
 public interface Specification<T> extends Predicat<T> {
+    Specification<Object> toujoursVrai = (t) -> true;
 
+    Specification<Object> toujoursFaux = (t) -> false;
 
-    // Synonyme pour la méthode statique 'non'
+    @SafeVarargs
+    static <T> Specification<T> et(Predicate<T>... predicates) {
+        return Arrays.stream(predicates)
+                .reduce(Predicate::and)
+                .map(Specification::soit)
+                .orElse(t -> true);
+    }
+
+    static <T> Specification<T> soit(Predicate<? super T> predicat) {
+        return predicat::test;
+    }
+
+    @SafeVarargs
+    static <T> Specification<T> ou(Predicate<T>... predicates) {
+        return Arrays.stream(predicates)
+                .reduce(Predicate::or)
+                .map(Specification::soit)
+                .orElse(t -> false);
+    }
+
+    static <T, U> Specification<T> soit(Function<? super T, U> extracteur, Predicate<U> predicat) {
+        return (t) -> predicat.test(extracteur.apply(t));
+    }
+
     static <T> Specification<T> pas(Predicate<? super T> predicat) {
         return non(predicat);
     }
 
-    /**
-     * Crée une spécification qui est la négation d'un prédicat donnée.
-     * La spécification résultante est satisfaite si le prédicat donné est contredit.
-     *
-     * @param predicat Le prédicat à contredire.
-     * @return Une nouvelle spécification qui est la négation du prédicat donnée.
-     */
     static <T> Specification<T> non(Predicate<? super T> predicat) {
-        return predicat.negate()::test;
+
+        return (t) -> !predicat.test(t);
     }
 
-    // Utiliser 'soit' comme un nom de méthode pour commencer une spécification
-    static <T> Specification<T> soit(Predicate<T> predicat) {
-        return predicat::test;
+
+    default Specification<T> avec(Message m) {
+        return new AvecMessage<>(this, m);
     }
 
-    static <T, U> Specification<T> soit(Function<T, U> extracteur, Predicate<U> predicat) {
-        return (t) -> predicat.test(extracteur.apply(t));
+    default boolean estSatisfaitePar(T t, @NonNull CollecteurNotifications c) {
+        final boolean estSatisfaite = estSatisfaitePar(t);
+        c.ajouter(!estSatisfaite, getMessage(), this, t);
+        return estSatisfaite;
     }
 
-    /**
-     * Crée une spécification qui est la conjonction de plusieurs spécifications données.
-     * La spécification résultante est satisfaite uniquement si toutes les spécifications données sont satisfaits.
-     *
-     * @param predicates Les prédicats à combiner.
-     * @return Une nouvelle spécification qui est la conjonction de toutes les spécifications données.
-     */
-    @SafeVarargs
-    static <T> Specification<T> et(Predicate<T>... predicates) {
-        return (t) -> Arrays.stream(predicates).allMatch(p -> p.test(t));
-    }
-
-    /**
-     * Crée une spécification qui est la disjonction de plusieurs spécifications données.
-     * La spécification résultante est satisfaite si au moins une des spécifications données est satisfaite.
-     *
-     * @param predicates Les prédicats à combiner.
-     * @return Une nouvelle spécification qui est la disjonction de toutes les spécifications données.
-     */
-    @SafeVarargs
-    static <T> Specification<T> ou(Predicate<T>... predicates) {
-        return (t) -> Arrays.stream(predicates).anyMatch(p -> p.test(t));
-    }
-
-    /**
-     * Combine cette spécification avec un prédicat (au sens large, il peut s'agir d'un Predicate, d'un Predicat
-     * ou d'une Specification) en utilisant l'opération logique OU EXCLUSIF (XOR).
-     * La spécification résultante est satisfaite si exactement l'un ou l'autre de la spécification ou du prédicat donné
-     * est satisfaits (mais pas les deux en même temps).
-     *
-     * @param autre Le deuxième prédicat à combiner.
-     * @return Une nouvelle spécification qui est la disjonction exclusive de cette spécification et du prédicat donné.
-     */
-    default Specification<T> ouEx(Specification<T> autre) {
-        return this.et(autre.non()).ou(this.non().et(autre));
-    }
-
-    /**
-     * Combine cette spécification avec un prédicat (au sens large, il peut s'agir d'un Predicate, d'un Predicat
-     * ou d'une Specification) en utilisant l'opération logique ET.
-     * La spécification résultante est satisfaite uniquement si les deux prédicats sont satisfaits.
-     *
-     * @param autre Le deuxième prédicat à combiner.
-     * @return Une nouvelle spécification qui est la conjonction de cette spécification et du prédicat donné.
-     */
-    default Specification<T> et(Predicate<? super T> autre) {
-        return Predicat.super.et(autre)::test;
-    }
-
-    /**
-     * Combine cette spécification avec un prédicat (au sens large, il peut s'agir d'un Predicate, d'un Predicat
-     * ou d'une Specification) en utilisant l'opération logique OU.
-     * La spécification résultante est satisfaite si l'une ou l'autre des spécifications est satisfaite.
-     *
-     * @param autre Le deuxième prédicat à combiner.
-     * @return Une nouvelle spécification qui est la disjonction de cette spécification et du prédicat donné.
-     */
-    default Specification<T> ou(Predicate<? super T> autre) {
-        return Predicat.super.ou(autre)::test;
-    }
-
-    /**
-     * Évalue si cette spécification est satisfaite par l'entité donnée.
-     *
-     * @param t L'entité à évaluer.
-     * @return true si l'entité satisfait la spécification, false sinon.
-     */
-    default SpecificationDifferee differer(T t) {
-        return (Void) -> estSatisfaitePar(t);
-    }
-
-    /**
-     * Évalue si cette spécification est satisfaite par l'entité donnée.
-     *
-     * @param t L'entité à évaluer.
-     * @return true si l'entité satisfait la spécification, false sinon.
-     */
     default boolean estSatisfaitePar(T t) {
-        return tester(t);
+        return this.test(t);
     }
 
-    // Synonyme pour 'etNon'
+    default Message getMessage() {
+        return null;
+    }
+
+    default Specification<T> et(Specification<? super T> autre) {
+        return new Et<>(this, autre);
+    }
+
+    default Specification<T> ou(Specification<? super T> autre) {
+        return new Ou<>(this, autre);
+    }
+
     default Specification<T> etPas(Specification<? super T> autre) {
         return etNon(autre);
     }
 
-    // Combinateur personnalisé exemple
+    /**
+     * Combinateur personnalisé pour combiner cette spécification avec un autre prédicat en utilisant l'opération logique ET NON.
+     * La spécification résultante est satisfaite si la première spécification est satisfaite et la seconde ne l'est pas.
+     *
+     * @param autre Le deuxième prédicat à combiner.
+     * @return Une nouvelle spécification qui est la conjonction de cette spécification et de la négation du prédicat donné.
+     */
     default Specification<T> etNon(Specification<? super T> autre) {
-        return (t) -> this.test(t) && !autre.test(t);
+        return new Et<>(this, autre.non());
     }
 
-    // Un autre synonyme pour 'etNon'
+    default Specification<T> non() {
+        return new Non<>(this, null);
+    }
+
+    /**
+     * Un synonyme pour 'etNon'. Combine cette spécification avec un autre prédicat en utilisant l'opération
+     * logique ET NON. La spécification résultante est satisfaite si la première spécification est satisfaite et
+     * la seconde ne l'est pas.
+     *
+     * @param autre Le deuxième prédicat à combiner.
+     * @return Une nouvelle spécification qui est la conjonction de cette spécification et de la négation du prédicat donné.
+     */
     default Specification<T> ni(Specification<? super T> autre) {
         return etNon(autre);
     }
 
-    // Aide au débogage exemple
-    default Specification<T> debuguer(String etiquette) {
-        return (t) -> {
-            boolean resultat = this.test(t);
-            System.out.println("Spécification " + etiquette + " pour " + t + ": " + resultat);
-            return resultat;
-        };
+    default Specification<T> ouX(Specification<? super T> autre) {
+        return new Ou<>(this, autre, true);
+    }
+
+    default SpecificationDifferee differer(T t) {
+        return (u) -> estSatisfaitePar(t);
+    }
+
+    @AllArgsConstructor
+    static class AvecMessage<T> implements Specification<T> {
+        private final Specification<T> specification;
+        @Getter
+        private final Message message;
+
+        @Override
+        public boolean test(T t) {
+            return specification.test(t);
+        }
+    }
+
+
+    static class Et<T> extends Operator<T> {
+
+
+        public Et(Specification<T> spec1, Specification<? super T> spec2) {
+            super(spec1, spec2, (b1, b2) -> b1 && b2, ShortCut.AND);
+        }
+
+
+    }
+
+    static class Ou<T> extends Operator<T> {
+
+        public Ou(Specification<T> spec1, Specification<? super T> spec2) {
+            this(spec1, spec2, false);
+        }
+
+        public Ou(Specification<T> spec1, Specification<? super T> spec2, boolean excl) {
+            super(spec1, spec2, (!excl) ? (b1, b2) -> b1 || b2 : (b1, b2) -> b1 ^ b2, Operator.ShortCut.OR);
+        }
+
+        @Override
+        public boolean estSatisfaitePar(T t, @NonNull CollecteurNotifications c) {
+
+            CollecteurNotifications c1 = new CollecteurNotifications();
+            boolean res = super.estSatisfaitePar(t, c1);
+            c.ajouterTout(!res, c1);
+            return res;
+        }
+    }
+
+    static class Non<T> extends Operator<T> {
+
+        protected Non(Specification<T> spec1, Specification<? super T> spec2) {
+            super(spec1, toujoursVrai, (b1, b2) -> !b1, Operator.ShortCut.UNARY);
+        }
     }
 
 

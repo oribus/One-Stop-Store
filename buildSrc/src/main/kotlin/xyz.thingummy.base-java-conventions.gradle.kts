@@ -48,8 +48,12 @@ dependencies {
     spotbugsPlugins("com.h3xstream.findsecbugs:findsecbugs-plugin:1.12.0")
     compileOnly("org.projectlombok:lombok:1.18.28")
     compileOnly("org.mapstruct:mapstruct:1.5.5.Final")
+    //
     annotationProcessor("org.projectlombok:lombok:1.18.28")
     annotationProcessor("org.mapstruct:mapstruct-processor:1.5.5.Final")
+    //
+    implementation("org.slf4j:slf4j-api:2.0.9")
+    //implementation("org.slf4j:slf4j-simple:2.0.9.Final")
     // Use JUnit Jupiter for testing.
     testImplementation("org.junit.jupiter:junit-jupiter:5.9.3")
     /*testCompileOnly("org.projectlombok:lombok:1.18.28")

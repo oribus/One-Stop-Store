@@ -34,16 +34,18 @@ import java.util.function.Predicate;
 @FunctionalInterface
 public interface Predicat<T> extends Predicate<T> {
 
-
     /**
      * Évalue ce prédicat sur l'argument donné.
      *
      * @param t l'argument sur lequel évaluer le prédicat courant
      * @return true si l'argument d'entrée vérifie le prédicat, sinon false
      */
+
+
     default boolean tester(T t) {
         return test(t);
     }
+
 
     /**
      * Compose le prédicat courant avec un autre prédicat pour en créer un nouveau qui représente

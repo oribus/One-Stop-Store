@@ -27,7 +27,7 @@ package xyz.thingummy.oss.model.specification;
 import java.util.function.BooleanSupplier;
 
 @FunctionalInterface
-public interface SpecificationDifferee extends Specification<Void>, BooleanSupplier {
+public interface SpecificationDifferee extends Specification<Object>, BooleanSupplier {
 
     @Override
     default boolean getAsBoolean() {
@@ -35,6 +35,6 @@ public interface SpecificationDifferee extends Specification<Void>, BooleanSuppl
     }
 
     default boolean estSatisfaite() {
-        return Specification.super.estSatisfaitePar(null);
+        return estSatisfaitePar(null);
     }
 }
