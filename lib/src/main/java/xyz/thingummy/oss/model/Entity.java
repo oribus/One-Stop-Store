@@ -1,4 +1,6 @@
 /*
+ * The MIT License (MIT)
+ *
  * Copyright (c) 2023, Jérôme ROBERT
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -20,6 +22,6 @@
  */
 package xyz.thingummy.oss.model;
 
-public interface Entity<T extends Entity<T,I>, I extends EntityId<T>> extends BaseEntity<T, I> {
+public interface Entity<T extends Entity<T, I>, I extends EntityId<T>> extends BaseEntity<T, I> {
     I getId();
 }

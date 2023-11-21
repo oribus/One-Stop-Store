@@ -26,33 +26,40 @@
 
 package xyz.thingummy.oss.model.specification;
 
+import lombok.AllArgsConstructor;
 import lombok.NonNull;
+import xyz.thingummy.oss.commons.notification.CollecteurNotifications;
+import xyz.thingummy.oss.commons.notification.Message;
 
-import java.util.function.Predicate;
+import java.util.Optional;
 
-@FunctionalInterface
-public interface Validation<T> extends Specification<T> {
+@AllArgsConstructor
+class AvecMessage<T> implements Specification<T> {
+    private final Specification<T> specification;
+
+    @NonNull
+    private final Message message;
+    private final Message messageAdditionnel;
 
     @Override
-    default Validation<T> et(@NonNull final Predicate<? super T> autre) {
-        return (t) -> this.test(t) & !autre.test(t);
+    public boolean estSatisfaitePar(final T t, @NonNull final CollecteurNotifications c) {
+        final boolean estSatisfaite = specification.estSatisfaitePar(t, c);
+        getMessage().ifPresent(m -> c.ajouter(!estSatisfaite, m, this, t));
+        return estSatisfaite;
     }
 
     @Override
-    default Validation<T> etPas(@NonNull final Specification<? super T> autre) {
-        return etNon(autre);
+    public Optional<Message> getMessage() {
+        return Optional.of(message);
     }
 
     @Override
-    // Combinateur personnalisé exemple
-    default Validation<T> etNon(@NonNull final Specification<? super T> autre) {
-        return (t) -> this.test(t) & !autre.test(t);
+    public Optional<Message> getMessageAdditionnel() {
+        return Optional.of(messageAdditionnel);
     }
 
     @Override
-
-    // Un autre synonyme pour 'etNon'
-    default Validation<T> ni(@NonNull final Specification<? super T> autre) {
-        return etNon(autre);
+    public boolean test(final T t) {
+        return specification.test(t);
     }
 }

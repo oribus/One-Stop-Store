@@ -1,4 +1,6 @@
 /*
+ * The MIT License (MIT)
+ *
  * Copyright (c) 2023, Jérôme ROBERT
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy of
@@ -24,6 +26,8 @@
 
 package xyz.thingummy.oss.model.specification;
 
+import lombok.NonNull;
+
 import java.util.function.Predicate;
 
 /**
@@ -42,7 +46,7 @@ public interface Predicat<T> extends Predicate<T> {
      */
 
 
-    default boolean tester(T t) {
+    default boolean tester(final T t) {
         return test(t);
     }
 
@@ -54,7 +58,7 @@ public interface Predicat<T> extends Predicate<T> {
      * @param autre le prédicat à combiner avec le prédicat courant
      * @return un prédicat qui est la conjonction du prédicat courant et du prédicat argument
      */
-    default Predicat<T> et(Predicate<? super T> autre) {
+    default Predicat<T> et(@NonNull final Predicate<? super T> autre) {
         return Predicate.super.and(autre)::test;
     }
 
@@ -65,7 +69,7 @@ public interface Predicat<T> extends Predicate<T> {
      * @param autre le prédicat à combiner avec le prédicat courant
      * @return un prédicat qui est la disjonction du prédicat courant et du prédicat argument
      */
-    default Predicat<T> ou(Predicate<? super T> autre) {
+    default Predicat<T> ou(@NonNull final Predicate<? super T> autre) {
         return Predicate.super.or(autre)::test;
     }
 

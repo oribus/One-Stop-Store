@@ -1,4 +1,6 @@
 /*
+ * The MIT License (MIT)
+ *
  * Copyright (c) 2023, Jérôme ROBERT
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -23,6 +25,7 @@ package xyz.thingummy.oss.model;
 
 /**
  * Base interface for entities which are part of an aggregate (the root of this aggregate being an {@link AggregateRoot}).
+ *
  * @param <E> The type of the entity
  * @param <I> The type of the entity's identifier'
  * @param <R> The type of the entity's aggregate root'

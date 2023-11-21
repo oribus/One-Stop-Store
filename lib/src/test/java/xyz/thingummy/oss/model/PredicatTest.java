@@ -1,4 +1,6 @@
 /*
+ * The MIT License (MIT)
+ *
  * Copyright (c) 2023, Jérôme ROBERT
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy of
@@ -57,7 +59,7 @@ class PredicatTest {
     @Test
     void test_et() {
         // when
-        Predicat<Integer> estPairEtStrictementPositif = estStrictementPositif.et(estPair);
+        final Predicat<Integer> estPairEtStrictementPositif = estStrictementPositif.et(estPair);
 
         // Vérification du comportement du prédicat.
         assertTrue(estPairEtStrictementPositif.tester(2));
@@ -72,7 +74,7 @@ class PredicatTest {
     @Test
     void test_ou() {
         // when
-        Predicat<Integer> estPairOuStrictementPositif = estStrictementPositif.ou(estPair);
+        final Predicat<Integer> estPairOuStrictementPositif = estStrictementPositif.ou(estPair);
 
         // Vérification du comportement du prédicat.
         assertTrue(estPairOuStrictementPositif.tester(2));
@@ -87,7 +89,7 @@ class PredicatTest {
     @Test
     void test_non() {
         // Construction du prédicat estImpair par négation du prédicat estPair.
-        Predicat<Integer> estImpair = estPair.non();
+        final Predicat<Integer> estImpair = estPair.non();
         // Vérification du comportement du prédicat.
         assertFalse(estImpair.tester(2));
         assertTrue(estImpair.tester(1));

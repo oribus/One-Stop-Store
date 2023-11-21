@@ -1,4 +1,6 @@
 /*
+ * The MIT License (MIT)
+ *
  * Copyright (c) 2023, Jérôme ROBERT
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -24,6 +26,7 @@ import java.util.Collection;
 
 /**
  * Base interface for entities which are the root of an aggregate.
+ *
  * @param <E> The type of the entity
  * @param <I> The type of the entity's identifier
  */

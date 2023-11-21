@@ -1,4 +1,6 @@
 /*
+ * The MIT License (MIT)
+ *
  * Copyright (c) 2023, Jérôme ROBERT
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy of
@@ -24,21 +26,22 @@
 
 package xyz.thingummy.oss.model.specification;
 
+import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.NonNull;
 import xyz.thingummy.oss.commons.notification.CollecteurNotifications;
 
 import java.util.function.BinaryOperator;
 
-@AllArgsConstructor
-abstract class Operator<T> implements Specification<T> {
-    private final Specification<T> spec1;
-    private final Specification<? super T> spec2;
-    private final BinaryOperator<Boolean> operator;
-    private final ShortCut shortCut;
+@AllArgsConstructor(access = AccessLevel.PUBLIC)
+public class SpecificationCombinee<T> implements Specification<T> {
+    protected final Specification<T> spec1;
+    protected final Specification<? super T> spec2;
+    protected final BinaryOperator<Boolean> operator;
+    protected final ShortCut shortCut;
 
     @Override
-    public boolean estSatisfaitePar(T t, @NonNull CollecteurNotifications c) {
+    public boolean estSatisfaitePar(final T t, @NonNull final CollecteurNotifications c) {
         final boolean left = spec1.estSatisfaitePar(t, c);
         return switch (shortCut) {
             case AND -> (left) ? operator.apply(true, spec2.estSatisfaitePar(t, c)) : false;
@@ -51,13 +54,16 @@ abstract class Operator<T> implements Specification<T> {
         };
     }
 
-    public boolean test(T t) {
-        return operator.apply(spec1.estSatisfaitePar(t), spec2.estSatisfaitePar(t));
+    public boolean test(final T t) {
+        final boolean left = spec1.estSatisfaitePar(t);
+        return switch (shortCut) {
+            case AND -> (left) ? operator.apply(true, spec2.estSatisfaitePar(t)) : false;
+            case OR -> (!left) ? operator.apply(false, spec2.estSatisfaitePar(t)) : true;
+            case UNARY -> operator.apply(left, null);
+            case NONE -> {
+                final boolean right = spec2.estSatisfaitePar(t);
+                yield operator.apply(left, right);
+            }
+        };
     }
-
-    protected enum ShortCut {
-        AND, OR, NONE, UNARY
-    }
-
-
 }

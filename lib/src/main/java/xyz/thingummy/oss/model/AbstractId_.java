@@ -1,4 +1,6 @@
 /*
+ * The MIT License (MIT)
+ *
  * Copyright (c) 2023, Jérôme ROBERT
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -54,6 +56,15 @@ public abstract class AbstractId_<T extends BaseEntity<T, ? extends Id<T>>> impl
  * @param <U>   actual type of the Id
  * @return an instance of the Id class
  * @throws InstantiationException if the actual class of the Id entity does not meet the requirements
+ * <p>
+ * Returns whether the id is a plain ID or an ID with a juncture
+ * @return true if the id is a plain ID, false otherwise
+ * <p>
+ * Returns whether the id is an ID with a juncture or a plain ID
+ * @return true if the id is an ID with a juncture, false otherwise
+ * <p>
+ * Returns the String representation of the id formed of a UUID and an optional juncture separated by a colon
+ * @return the String representation of the id
  * <p>
  * Returns whether the id is a plain ID or an ID with a juncture
  * @return true if the id is a plain ID, false otherwise

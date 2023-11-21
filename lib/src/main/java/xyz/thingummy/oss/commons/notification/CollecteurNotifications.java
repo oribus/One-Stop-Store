@@ -1,4 +1,6 @@
 /*
+ * The MIT License (MIT)
+ *
  * Copyright (c) 2023, Jérôme ROBERT
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy of
@@ -26,7 +28,10 @@ package xyz.thingummy.oss.commons.notification;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 import java.util.function.BooleanSupplier;
+import java.util.function.Predicate;
+import java.util.stream.Collectors;
 
 /**
  * Représente un ensemble de notifications pouvant résulter d'un processus quelconque,
@@ -34,7 +39,21 @@ import java.util.function.BooleanSupplier;
  */
 public class CollecteurNotifications {
 
-    private final List<Notification<?, ?>> entries = new ArrayList<>();
+    public static final Predicate<Notification<?, ?>> CRITIQUE = n -> n.getTypeMessage() == TypeMessage.CRITIQUE;
+    public static final Predicate<Notification<?, ?>> ERREUR = n -> n.getTypeMessage() == TypeMessage.ERREUR;
+    public static final Predicate<Notification<?, ?>> AVERTISSEMENT = n -> n.getTypeMessage() == TypeMessage.AVERTISSEMENT;
+    public static final Predicate<Notification<?, ?>> INFORMATION = n -> n.getTypeMessage() == TypeMessage.INFORMATION;
+    public static final Predicate<Notification<?, ?>> CONFIRMATION = n -> n.getTypeMessage() == TypeMessage.CONFIRMATION;
+    private final List<Notification<?, ?>> notifications = Collections.synchronizedList(new ArrayList<>());
+
+
+    public static Predicate<Notification<?, ?>> contientMessage(final Message message) {
+        return n -> n.getMessage().equals(message);
+    }
+
+    public static Predicate<Notification<?, ?>> contientMessage(final String message) {
+        return n -> n.getMessage().getKey().equals(message);
+    }
 
     /**
      * Ajoute une entrée de notification au collecteur.
@@ -45,7 +64,7 @@ public class CollecteurNotifications {
      * @param <T>       Le type de l'objet de référence.
      * @param <S>       Le type de la source de la notification.
      */
-    public <T, S> void ajouter(Message message, S source, T reference) {
+    public <T, S> void ajouter(final Message message, final S source, final T reference) {
         ajouter(true, message, source, reference);
     }
 
@@ -59,9 +78,9 @@ public class CollecteurNotifications {
      * @param <T>       Le type de l'objet de référence.
      * @param <S>       Le type de la source de la notification.
      */
-    public <T, S> void ajouter(boolean condition, Message message, S source, T reference) {
+    public <T, S> void ajouter(final boolean condition, final Message message, final S source, final T reference) {
         if (condition && null != message) {
-            entries.add(new Notification<>(message, source, reference));
+            notifications.add(new Notification<>(message, source, reference));
         }
     }
 
@@ -75,8 +94,12 @@ public class CollecteurNotifications {
      * @param <T>       Le type de l'objet de référence.
      * @param <S>       Le type de la source de la notification.
      */
-    public <T, S> void ajouter(BooleanSupplier condition, Message message, S source, T reference) {
+    public <T, S> void ajouter(final BooleanSupplier condition, final Message message, final S source, final T reference) {
         ajouter(!condition.getAsBoolean(), message, source, reference);
+    }
+
+    public List<Notification<?, ?>> filtrer(final Predicate<Notification<?, ?>> critere) {
+        return notifications.stream().filter(critere).collect(Collectors.toList());
     }
 
     /**
@@ -85,22 +108,22 @@ public class CollecteurNotifications {
      * @return Vrai s'il y a des entrées de notification, faux sinon.
      */
     public boolean hasNotifications() {
-        return !entries.isEmpty();
+        return !notifications.isEmpty();
     }
 
     /**
      * Efface toutes les entrées de notification du collecteur.
      */
     public void vider() {
-        entries.clear();
+        notifications.clear();
     }
 
-    public void ajouterTout(boolean res, CollecteurNotifications c1) {
-        ajouter(res, c1.getEntries());
+    public void ajouterTout(final boolean res, final CollecteurNotifications c1) {
+        ajouterTout(res, c1.getNotifications());
     }
 
-    private void ajouter(boolean res, List<Notification<?, ?>> entries) {
-        this.entries.addAll(entries);
+    private void ajouterTout(final boolean res, final List<Notification<?, ?>> entries) {
+        this.notifications.addAll(entries);
     }
 
     /**
@@ -108,7 +131,23 @@ public class CollecteurNotifications {
      *
      * @return Une liste non modifiable d'entrées de notification.
      */
-    public List<Notification<?, ?>> getEntries() {
-        return Collections.unmodifiableList(entries);
+    public List<Notification<?, ?>> getNotifications() {
+        return Collections.unmodifiableList(notifications);
     }
+
+    public Map<TypeMessage, List<Notification<?, ?>>> getNotificationsParTypeMessage() {
+        return notifications.stream()
+                .collect(Collectors.groupingBy(Notification::getTypeMessage));
+    }
+
+    public Map<TypeMessage, Long> denombrerNotifications() {
+        return notifications.stream()
+                .collect(Collectors.groupingBy(Notification::getTypeMessage, Collectors.counting()));
+    }
+
+    public long denombrerNotifications(final Predicate<Notification<?, ?>> critere) {
+        return notifications.stream()
+                .filter(critere).count();
+    }
+
 }

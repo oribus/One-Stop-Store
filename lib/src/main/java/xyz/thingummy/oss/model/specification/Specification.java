@@ -1,4 +1,6 @@
 /*
+ * The MIT License (MIT)
+ *
  * Copyright (c) 2023, Jérôme ROBERT
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy of
@@ -24,15 +26,16 @@
 
 package xyz.thingummy.oss.model.specification;
 
-import lombok.AllArgsConstructor;
-import lombok.Getter;
 import lombok.NonNull;
 import xyz.thingummy.oss.commons.notification.CollecteurNotifications;
 import xyz.thingummy.oss.commons.notification.Message;
 
-import java.util.Arrays;
+import java.util.Optional;
+import java.util.function.BinaryOperator;
 import java.util.function.Function;
-import java.util.function.Predicate;
+
+import static xyz.thingummy.oss.model.specification.Specifications.Specifications0;
+import static xyz.thingummy.oss.model.specification.Specifications.toujoursVrai;
 
 /**
  * Interface Specification - représente une spécification selon acception du terme dans le contexte du
@@ -45,71 +48,28 @@ import java.util.function.Predicate;
  */
 @FunctionalInterface
 public interface Specification<T> extends Predicat<T> {
-    Specification<Object> toujoursVrai = (t) -> true;
 
-    Specification<Object> toujoursFaux = (t) -> false;
-
-    @SafeVarargs
-    static <T> Specification<T> et(Predicate<T>... predicates) {
-        return Arrays.stream(predicates)
-                .reduce(Predicate::and)
-                .map(Specification::soit)
-                .orElse(t -> true);
+    default Specification<T> avec(final Message m) {
+        return new AvecMessage<>(this, m, null);
     }
 
-    static <T> Specification<T> soit(Predicate<? super T> predicat) {
-        return predicat::test;
+    default Specification<T> avec(final Message message, final Message messageAdditionnel) {
+        return new AvecMessage<>(this, message, messageAdditionnel);
     }
 
-    @SafeVarargs
-    static <T> Specification<T> ou(Predicate<T>... predicates) {
-        return Arrays.stream(predicates)
-                .reduce(Predicate::or)
-                .map(Specification::soit)
-                .orElse(t -> false);
+    default Specification<T> combiner(final Specification<? super T> spec2, @NonNull final BinaryOperator<Boolean> operateur) {
+        return new SpecificationCombinee<>(this, spec2, operateur, ShortCut.NONE);
     }
 
-    static <T, U> Specification<T> soit(Function<? super T, U> extracteur, Predicate<U> predicat) {
-        return (t) -> predicat.test(extracteur.apply(t));
+    default Specifications0 differer(final T t) {
+        return () -> estSatisfaitePar(t);
     }
 
-    static <T> Specification<T> pas(Predicate<? super T> predicat) {
-        return non(predicat);
-    }
-
-    static <T> Specification<T> non(Predicate<? super T> predicat) {
-
-        return (t) -> !predicat.test(t);
-    }
-
-
-    default Specification<T> avec(Message m) {
-        return new AvecMessage<>(this, m);
-    }
-
-    default boolean estSatisfaitePar(T t, @NonNull CollecteurNotifications c) {
-        final boolean estSatisfaite = estSatisfaitePar(t);
-        c.ajouter(!estSatisfaite, getMessage(), this, t);
-        return estSatisfaite;
-    }
-
-    default boolean estSatisfaitePar(T t) {
+    default boolean estSatisfaitePar(final T t) {
         return this.test(t);
     }
 
-    default Message getMessage() {
-        return null;
-    }
-
-    default Specification<T> et(Specification<? super T> autre) {
-        return new Et<>(this, autre);
-    }
-
-    default Specification<T> ou(Specification<? super T> autre) {
-        return new Ou<>(this, autre);
-    }
-
-    default Specification<T> etPas(Specification<? super T> autre) {
+    default Specification<T> etPas(@NonNull final Specification<? super T> autre) {
         return etNon(autre);
     }
 
@@ -120,12 +80,34 @@ public interface Specification<T> extends Predicat<T> {
      * @param autre Le deuxième prédicat à combiner.
      * @return Une nouvelle spécification qui est la conjonction de cette spécification et de la négation du prédicat donné.
      */
-    default Specification<T> etNon(Specification<? super T> autre) {
-        return new Et<>(this, autre.non());
+    default Specification<T> etNon(@NonNull final Specification<? super T> autre) {
+        return this.et(autre.non());
+    }
+
+    default Specification<T> et(@NonNull final Specification<? super T> autre) {
+        return new SpecificationCombinee<>(this, autre, (b1, b2) -> b1 && b2, ShortCut.AND);
     }
 
     default Specification<T> non() {
-        return new Non<>(this, null);
+        return this.combiner(toujoursVrai, (b1, b2) -> !b1, ShortCut.UNARY);
+    }
+
+    default Specification<T> combiner(final Specification<? super T> spec2, @NonNull final BinaryOperator<Boolean> operateur, @NonNull final ShortCut shortCut) {
+        return new SpecificationCombinee<>(this, spec2, operateur, shortCut);
+    }
+
+    default boolean estSatisfaitePar(final T t, @NonNull final CollecteurNotifications c) {
+        final boolean estSatisfaite = estSatisfaitePar(t);
+        getMessage().ifPresent(m -> c.ajouter(!estSatisfaite, m, this, t));
+        return estSatisfaite;
+    }
+
+    default Optional<Message> getMessage() {
+        return Optional.empty();
+    }
+
+    default Optional<Message> getMessageAdditionnel() {
+        return Optional.empty();
     }
 
     /**
@@ -136,66 +118,20 @@ public interface Specification<T> extends Predicat<T> {
      * @param autre Le deuxième prédicat à combiner.
      * @return Une nouvelle spécification qui est la conjonction de cette spécification et de la négation du prédicat donné.
      */
-    default Specification<T> ni(Specification<? super T> autre) {
+    default Specification<T> ni(@NonNull final Specification<? super T> autre) {
         return etNon(autre);
     }
 
-    default Specification<T> ouX(Specification<? super T> autre) {
-        return new Ou<>(this, autre, true);
+    default Specification<T> ou(@NonNull final Specification<? super T> autre) {
+        return new Ou<>(this, autre);
     }
 
-    default SpecificationDifferee differer(T t) {
-        return (u) -> estSatisfaitePar(t);
+    default Specification<T> ouX(@NonNull final Specification<? super T> autre) {
+        return new OuX<>(this, autre);
     }
 
-    @AllArgsConstructor
-    static class AvecMessage<T> implements Specification<T> {
-        private final Specification<T> specification;
-        @Getter
-        private final Message message;
-
-        @Override
-        public boolean test(T t) {
-            return specification.test(t);
-        }
-    }
-
-
-    static class Et<T> extends Operator<T> {
-
-
-        public Et(Specification<T> spec1, Specification<? super T> spec2) {
-            super(spec1, spec2, (b1, b2) -> b1 && b2, ShortCut.AND);
-        }
-
-
-    }
-
-    static class Ou<T> extends Operator<T> {
-
-        public Ou(Specification<T> spec1, Specification<? super T> spec2) {
-            this(spec1, spec2, false);
-        }
-
-        public Ou(Specification<T> spec1, Specification<? super T> spec2, boolean excl) {
-            super(spec1, spec2, (!excl) ? (b1, b2) -> b1 || b2 : (b1, b2) -> b1 ^ b2, Operator.ShortCut.OR);
-        }
-
-        @Override
-        public boolean estSatisfaitePar(T t, @NonNull CollecteurNotifications c) {
-
-            CollecteurNotifications c1 = new CollecteurNotifications();
-            boolean res = super.estSatisfaitePar(t, c1);
-            c.ajouterTout(!res, c1);
-            return res;
-        }
-    }
-
-    static class Non<T> extends Operator<T> {
-
-        protected Non(Specification<T> spec1, Specification<? super T> spec2) {
-            super(spec1, toujoursVrai, (b1, b2) -> !b1, Operator.ShortCut.UNARY);
-        }
+    default <U> Specification<U> transformer(@NonNull final Function<U, T> fonctionTransformation) {
+        return (U u) -> this.estSatisfaitePar(fonctionTransformation.apply(u));
     }
 
 

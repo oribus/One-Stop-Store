@@ -1,4 +1,6 @@
 /*
+ * The MIT License (MIT)
+ *
  * Copyright (c) 2023, Jérôme ROBERT
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy of
@@ -24,17 +26,22 @@
 
 package xyz.thingummy.oss.model.specification;
 
-import java.util.function.BooleanSupplier;
+import lombok.NonNull;
+import xyz.thingummy.oss.commons.notification.CollecteurNotifications;
 
-@FunctionalInterface
-public interface SpecificationDifferee extends Specification<Object>, BooleanSupplier {
+class Ou<T> extends SpecificationCombinee<T> {
+    boolean excl;
 
-    @Override
-    default boolean getAsBoolean() {
-        return estSatisfaite();
+    public Ou(@NonNull final Specification<T> spec1, @NonNull final Specification<? super T> spec2) {
+        super(spec1, spec2, (b1, b2) -> b1 || b2, ShortCut.OR);
     }
 
-    default boolean estSatisfaite() {
-        return estSatisfaitePar(null);
+    @Override
+    public boolean estSatisfaitePar(final T t, @NonNull final CollecteurNotifications c) {
+
+        final CollecteurNotifications c1 = new CollecteurNotifications();
+        final boolean res = super.estSatisfaitePar(t, c1);
+        c.ajouterTout(!res, c1);
+        return res;
     }
 }

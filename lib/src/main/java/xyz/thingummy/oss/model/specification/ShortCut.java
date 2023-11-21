@@ -26,33 +26,6 @@
 
 package xyz.thingummy.oss.model.specification;
 
-import lombok.NonNull;
-
-import java.util.function.Predicate;
-
-@FunctionalInterface
-public interface Validation<T> extends Specification<T> {
-
-    @Override
-    default Validation<T> et(@NonNull final Predicate<? super T> autre) {
-        return (t) -> this.test(t) & !autre.test(t);
-    }
-
-    @Override
-    default Validation<T> etPas(@NonNull final Specification<? super T> autre) {
-        return etNon(autre);
-    }
-
-    @Override
-    // Combinateur personnalisé exemple
-    default Validation<T> etNon(@NonNull final Specification<? super T> autre) {
-        return (t) -> this.test(t) & !autre.test(t);
-    }
-
-    @Override
-
-    // Un autre synonyme pour 'etNon'
-    default Validation<T> ni(@NonNull final Specification<? super T> autre) {
-        return etNon(autre);
-    }
+public enum ShortCut {
+    AND, OR, NONE, UNARY
 }

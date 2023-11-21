@@ -1,4 +1,6 @@
 /*
+ * The MIT License (MIT)
+ *
  * Copyright (c) 2023, Jérôme ROBERT
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy of
@@ -55,5 +57,9 @@ public class Notification<T, S> {
      */
     public Notification(Message message, S source, T reference) {
         this(message, source, reference, null);
+    }
+
+    public @lombok.NonNull TypeMessage getTypeMessage() {
+        return this.message.getType();
     }
 }

@@ -27,32 +27,17 @@
 package xyz.thingummy.oss.model.specification;
 
 import lombok.NonNull;
+import xyz.thingummy.oss.commons.notification.Message;
 
-import java.util.function.Predicate;
+class OuX<T> extends SpecificationCombinee<T> {
+    boolean excl;
 
-@FunctionalInterface
-public interface Validation<T> extends Specification<T> {
-
-    @Override
-    default Validation<T> et(@NonNull final Predicate<? super T> autre) {
-        return (t) -> this.test(t) & !autre.test(t);
+    public OuX(@NonNull final Specification<T> spec1, @NonNull final Specification<? super T> spec2) {
+        super(spec1.ou(spec2), (spec1.et(spec2)).non(), (b1, b2) -> b1 && b2, ShortCut.AND);
     }
 
     @Override
-    default Validation<T> etPas(@NonNull final Specification<? super T> autre) {
-        return etNon(autre);
-    }
-
-    @Override
-    // Combinateur personnalisé exemple
-    default Validation<T> etNon(@NonNull final Specification<? super T> autre) {
-        return (t) -> this.test(t) & !autre.test(t);
-    }
-
-    @Override
-
-    // Un autre synonyme pour 'etNon'
-    default Validation<T> ni(@NonNull final Specification<? super T> autre) {
-        return etNon(autre);
+    public Specification<T> avec(@NonNull final Message message, @NonNull final Message messageAdditionnel) {
+        return spec1.avec(message).et(spec2.avec(messageAdditionnel));
     }
 }
