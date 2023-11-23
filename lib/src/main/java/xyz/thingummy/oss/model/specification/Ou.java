@@ -36,12 +36,4 @@ class Ou<T> extends SpecificationCombinee<T> {
         super(spec1, spec2, (b1, b2) -> b1 || b2, ShortCut.OR);
     }
 
-    @Override
-    public boolean estSatisfaitePar(final T t, @NonNull final CollecteurNotifications c) {
-
-        final CollecteurNotifications c1 = new CollecteurNotifications();
-        final boolean res = super.estSatisfaitePar(t, c1);
-        c.ajouterTout(!res, c1);
-        return res;
-    }
 }

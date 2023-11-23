@@ -85,11 +85,11 @@ public interface Specification<T> extends Predicat<T> {
     }
 
     default Specification<T> et(@NonNull final Specification<? super T> autre) {
-        return new SpecificationCombinee<>(this, autre, (b1, b2) -> b1 && b2, ShortCut.AND);
+        return new Et<>(this, autre);
     }
 
     default Specification<T> non() {
-        return this.combiner(toujoursVrai, (b1, b2) -> !b1, ShortCut.UNARY);
+        return new Non<>(this);
     }
 
     default Specification<T> combiner(final Specification<? super T> spec2, @NonNull final BinaryOperator<Boolean> operateur, @NonNull final ShortCut shortCut) {
@@ -128,6 +128,11 @@ public interface Specification<T> extends Predicat<T> {
 
     default Specification<T> ouX(@NonNull final Specification<? super T> autre) {
         return new OuX<>(this, autre);
+    }
+
+
+    default Specification<T> sansMessage() {
+        return this;
     }
 
     default <U> Specification<U> transformer(@NonNull final Function<U, T> fonctionTransformation) {

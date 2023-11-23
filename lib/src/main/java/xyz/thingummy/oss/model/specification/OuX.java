@@ -30,7 +30,6 @@ import lombok.NonNull;
 import xyz.thingummy.oss.commons.notification.Message;
 
 class OuX<T> extends SpecificationCombinee<T> {
-    boolean excl;
 
     public OuX(@NonNull final Specification<T> spec1, @NonNull final Specification<? super T> spec2) {
         super(spec1.ou(spec2), (spec1.et(spec2)).non(), (b1, b2) -> b1 && b2, ShortCut.AND);

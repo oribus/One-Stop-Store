@@ -41,6 +41,14 @@ class AvecMessage<T> implements Specification<T> {
     private final Message message;
     private final Message messageAdditionnel;
 
+    public Specification<T> avec(final Message m) {
+        return new AvecMessage<>(specification, m, null);
+    }
+
+    public Specification<T> avec(final Message message, final Message messageAdditionnel) {
+        return new AvecMessage<>(specification, message, messageAdditionnel);
+    }
+
     @Override
     public boolean estSatisfaitePar(final T t, @NonNull final CollecteurNotifications c) {
         final boolean estSatisfaite = specification.estSatisfaitePar(t, c);
@@ -50,12 +58,17 @@ class AvecMessage<T> implements Specification<T> {
 
     @Override
     public Optional<Message> getMessage() {
-        return Optional.of(message);
+        return Optional.ofNullable(message);
+    }
+
+    @Override
+    public Specification<T> sansMessage() {
+        return specification;
     }
 
     @Override
     public Optional<Message> getMessageAdditionnel() {
-        return Optional.of(messageAdditionnel);
+        return Optional.ofNullable(messageAdditionnel);
     }
 
     @Override

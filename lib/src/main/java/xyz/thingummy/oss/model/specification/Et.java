@@ -29,9 +29,8 @@ package xyz.thingummy.oss.model.specification;
 import lombok.NonNull;
 
 class Et<T> extends SpecificationCombinee<T> {
-    boolean excl;
 
     public Et(@NonNull final Specification<T> spec1, @NonNull final Specification<? super T> spec2) {
-        super(spec1, spec2, (b1, b2) -> b1 || b2, ShortCut.OR);
+         super(spec1, spec2, (b1, b2) -> b1 && b2, ShortCut.AND);
     }
 }

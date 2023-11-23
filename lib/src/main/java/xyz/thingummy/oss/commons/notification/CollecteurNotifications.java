@@ -25,6 +25,8 @@
  */
 package xyz.thingummy.oss.commons.notification;
 
+import lombok.NonNull;
+
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -118,12 +120,14 @@ public class CollecteurNotifications {
         notifications.clear();
     }
 
-    public void ajouterTout(final boolean res, final CollecteurNotifications c1) {
-        ajouterTout(res, c1.getNotifications());
+    public void ajouterTout(final boolean condition, @NonNull final CollecteurNotifications c1) {
+        ajouterTout(condition, c1.getNotifications());
     }
 
-    private void ajouterTout(final boolean res, final List<Notification<?, ?>> entries) {
-        this.notifications.addAll(entries);
+    private void ajouterTout(final boolean condition, @NonNull final List<Notification<?, ?>> entries) {
+        if (condition) {
+            this.notifications.addAll(entries);
+        }
     }
 
     /**

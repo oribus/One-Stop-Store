@@ -42,16 +42,19 @@ public class SpecificationCombinee<T> implements Specification<T> {
 
     @Override
     public boolean estSatisfaitePar(final T t, @NonNull final CollecteurNotifications c) {
-        final boolean left = spec1.estSatisfaitePar(t, c);
-        return switch (shortCut) {
-            case AND -> (left) ? operator.apply(true, spec2.estSatisfaitePar(t, c)) : false;
-            case OR -> (!left) ? operator.apply(false, spec2.estSatisfaitePar(t, c)) : true;
+        final CollecteurNotifications c1 = new CollecteurNotifications();
+        final boolean left = spec1.estSatisfaitePar(t, c1);
+        final boolean estSatisfaite = switch (shortCut) {
+            case AND -> (left) ? operator.apply(true, spec2.estSatisfaitePar(t, c1)) : false;
+            case OR -> (!left) ? operator.apply(false, spec2.estSatisfaitePar(t, c1)) : true;
             case UNARY -> operator.apply(left, null);
             case NONE -> {
                 final boolean right = spec2.estSatisfaitePar(t, c);
                 yield operator.apply(left, right);
             }
         };
+        c.ajouterTout(!estSatisfaite, c1);
+        return estSatisfaite;
     }
 
     public boolean test(final T t) {

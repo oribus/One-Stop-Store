@@ -28,10 +28,13 @@ package xyz.thingummy.oss.model.specification;
 
 import lombok.NonNull;
 
+import static xyz.thingummy.oss.model.specification.Specifications.toujoursVrai;
+
 class Non<T> extends SpecificationCombinee<T> {
     boolean excl;
 
-    public Non(@NonNull final Specification<T> spec1, @NonNull final Specification<? super T> spec2) {
-         super(spec1, spec2, (b1, b2) -> b1 && b2, ShortCut.AND);
+    public Non(@NonNull final Specification<T> spec1) {
+         super(spec1, toujoursVrai, (b1, b2) -> !b1, ShortCut.UNARY);
     }
+
 }
