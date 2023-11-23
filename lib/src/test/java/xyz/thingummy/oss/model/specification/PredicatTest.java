@@ -24,7 +24,7 @@
  *
  */
 
-package xyz.thingummy.oss.model;
+package xyz.thingummy.oss.model.specification;
 
 import org.junit.jupiter.api.Test;
 import xyz.thingummy.oss.model.specification.Predicat;
