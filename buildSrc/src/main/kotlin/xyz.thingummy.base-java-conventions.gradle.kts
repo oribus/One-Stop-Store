@@ -63,7 +63,8 @@ dependencies {
     testAnnotationProcessor("org.projectlombok:lombok:1.18.28")
     testAnnotationProcessor("org.mapstruct:mapstruct-processor:1.5.5.Final")*/
 }
-
+tasks.withType<JavaCompile> { options.compilerArgs.add("--enable-preview") }
 tasks.withType<Test> {
     useJUnitPlatform()
+    jvmArgs("--enable-preview")
 }

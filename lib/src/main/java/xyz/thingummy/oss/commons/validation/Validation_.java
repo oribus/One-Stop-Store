@@ -24,30 +24,40 @@
  *
  */
 
-package xyz.thingummy.oss.model.specification;
+package xyz.thingummy.oss.commons.validation;
 
 import lombok.AllArgsConstructor;
 import lombok.NonNull;
 import xyz.thingummy.oss.commons.notification.CollecteurNotifications;
 import xyz.thingummy.oss.commons.notification.Message;
+import xyz.thingummy.oss.model.specification.Specification;
 
 import java.util.Optional;
 
 @AllArgsConstructor
-class AvecMessage<T> implements Specification<T> {
+public class Validation_<T> implements Specification<T> {
     private final Specification<T> specification;
 
     @NonNull
     private final Message message;
     private final Message messageAdditionnel;
 
-    public Specification<T> avec(final Message m) {
-        return new AvecMessage<>(specification, m, null);
+    static <T> Validation_<T> avec(Specification<T> specification, final Message m) {
+        return new Validation_<>(specification, m, null);
     }
 
-    public Specification<T> avec(final Message message, final Message messageAdditionnel) {
-        return new AvecMessage<>(specification, message, messageAdditionnel);
+    static <T> Validation_<T> avec(Specification<T> specification, final Message message, final Message messageAdditionnel) {
+        return new Validation_<>(specification, message, messageAdditionnel);
     }
+
+    public Validation_<T> avec(final Message m) {
+        return new Validation_<>(specification, m, null);
+    }
+
+    public Validation_<T> avec(final Message message, final Message messageAdditionnel) {
+        return new Validation_<>(specification, message, messageAdditionnel);
+    }
+
 
     @Override
     public boolean estSatisfaitePar(final T t, @NonNull final CollecteurNotifications c) {
@@ -62,17 +72,23 @@ class AvecMessage<T> implements Specification<T> {
     }
 
     @Override
-    public Specification<T> sansMessage() {
-        return specification;
-    }
-
-    @Override
     public Optional<Message> getMessageAdditionnel() {
         return Optional.ofNullable(messageAdditionnel);
     }
 
     @Override
+    public Specification<T> sansMessage() {
+        return specification;
+    }
+
+    @Override
     public boolean test(final T t) {
         return specification.test(t);
+    }
+
+    default boolean estSatisfaitePar(final T t, @NonNull final CollecteurNotifications c) {
+        final boolean estSatisfaite = estSatisfaitePar(t);
+        getMessage().ifPresent(m -> c.ajouter(!estSatisfaite, m, this, t));
+        return estSatisfaite;
     }
 }

@@ -27,15 +27,11 @@
 package xyz.thingummy.oss.model.specification;
 
 import lombok.NonNull;
-import xyz.thingummy.oss.commons.notification.CollecteurNotifications;
-import xyz.thingummy.oss.commons.notification.Message;
 
-import java.util.Optional;
 import java.util.function.BinaryOperator;
 import java.util.function.Function;
 
 import static xyz.thingummy.oss.model.specification.Specifications.Specifications0;
-import static xyz.thingummy.oss.model.specification.Specifications.toujoursVrai;
 
 /**
  * Interface Specification - représente une spécification selon acception du terme dans le contexte du
@@ -49,16 +45,8 @@ import static xyz.thingummy.oss.model.specification.Specifications.toujoursVrai;
 @FunctionalInterface
 public interface Specification<T> extends Predicat<T> {
 
-    default Specification<T> avec(final Message m) {
-        return new AvecMessage<>(this, m, null);
-    }
-
-    default Specification<T> avec(final Message message, final Message messageAdditionnel) {
-        return new AvecMessage<>(this, message, messageAdditionnel);
-    }
-
     default Specification<T> combiner(final Specification<? super T> spec2, @NonNull final BinaryOperator<Boolean> operateur) {
-        return new SpecificationCombinee<>(this, spec2, operateur, ShortCut.NONE);
+        return new SpecificationCombinee<>(this, spec2, operateur, SpecificationCombinee.ShortCut.NONE);
     }
 
     default Specifications0 differer(final T t) {
@@ -85,29 +73,15 @@ public interface Specification<T> extends Predicat<T> {
     }
 
     default Specification<T> et(@NonNull final Specification<? super T> autre) {
-        return new Et<>(this, autre);
+        return new SpecificationCombinee.Et<>(this, autre);
     }
 
     default Specification<T> non() {
-        return new Non<>(this);
+        return new SpecificationCombinee.Non<>(this);
     }
 
-    default Specification<T> combiner(final Specification<? super T> spec2, @NonNull final BinaryOperator<Boolean> operateur, @NonNull final ShortCut shortCut) {
+    default Specification<T> combiner(final Specification<? super T> spec2, @NonNull final BinaryOperator<Boolean> operateur, @NonNull final SpecificationCombinee.ShortCut shortCut) {
         return new SpecificationCombinee<>(this, spec2, operateur, shortCut);
-    }
-
-    default boolean estSatisfaitePar(final T t, @NonNull final CollecteurNotifications c) {
-        final boolean estSatisfaite = estSatisfaitePar(t);
-        getMessage().ifPresent(m -> c.ajouter(!estSatisfaite, m, this, t));
-        return estSatisfaite;
-    }
-
-    default Optional<Message> getMessage() {
-        return Optional.empty();
-    }
-
-    default Optional<Message> getMessageAdditionnel() {
-        return Optional.empty();
     }
 
     /**
@@ -123,16 +97,11 @@ public interface Specification<T> extends Predicat<T> {
     }
 
     default Specification<T> ou(@NonNull final Specification<? super T> autre) {
-        return new Ou<>(this, autre);
+        return new SpecificationCombinee.Ou<>(this, autre);
     }
 
     default Specification<T> ouX(@NonNull final Specification<? super T> autre) {
-        return new OuX<>(this, autre);
-    }
-
-
-    default Specification<T> sansMessage() {
-        return this;
+        return new SpecificationCombinee.OuX<>(this, autre);
     }
 
     default <U> Specification<U> transformer(@NonNull final Function<U, T> fonctionTransformation) {

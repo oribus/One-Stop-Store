@@ -29,33 +29,19 @@ package xyz.thingummy.oss.model.specification;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.NonNull;
-import xyz.thingummy.oss.commons.notification.CollecteurNotifications;
 
 import java.util.function.BinaryOperator;
 
+import static xyz.thingummy.oss.model.specification.Specifications.toujoursVrai;
+
 @AllArgsConstructor(access = AccessLevel.PUBLIC)
 public class SpecificationCombinee<T> implements Specification<T> {
+    @NonNull
     protected final Specification<T> spec1;
+    @NonNull
     protected final Specification<? super T> spec2;
     protected final BinaryOperator<Boolean> operator;
     protected final ShortCut shortCut;
-
-    @Override
-    public boolean estSatisfaitePar(final T t, @NonNull final CollecteurNotifications c) {
-        final CollecteurNotifications c1 = new CollecteurNotifications();
-        final boolean left = spec1.estSatisfaitePar(t, c1);
-        final boolean estSatisfaite = switch (shortCut) {
-            case AND -> (left) ? operator.apply(true, spec2.estSatisfaitePar(t, c1)) : false;
-            case OR -> (!left) ? operator.apply(false, spec2.estSatisfaitePar(t, c1)) : true;
-            case UNARY -> operator.apply(left, null);
-            case NONE -> {
-                final boolean right = spec2.estSatisfaitePar(t, c);
-                yield operator.apply(left, right);
-            }
-        };
-        c.ajouterTout(!estSatisfaite, c1);
-        return estSatisfaite;
-    }
 
     public boolean test(final T t) {
         final boolean left = spec1.estSatisfaitePar(t);
@@ -68,5 +54,39 @@ public class SpecificationCombinee<T> implements Specification<T> {
                 yield operator.apply(left, right);
             }
         };
+    }
+
+    public static enum ShortCut {
+        AND, OR, NONE, UNARY
+    }
+
+    static class Et<U> extends SpecificationCombinee<U> {
+
+        public Et(@NonNull final Specification<U> spec1, @NonNull final Specification<? super U> spec2) {
+            super(spec1, spec2, (b1, b2) -> b1 && b2, ShortCut.AND);
+        }
+    }
+
+    static class Ou<U> extends SpecificationCombinee<U> {
+
+        public Ou(@NonNull final Specification<U> spec1, @NonNull final Specification<? super U> spec2) {
+            super(spec1, spec2, (b1, b2) -> b1 || b2, ShortCut.OR);
+        }
+
+    }
+
+    static class OuX<U> extends SpecificationCombinee<U> {
+
+        public OuX(@NonNull final Specification<U> spec1, @NonNull final Specification<? super U> spec2) {
+            super(spec1.ou(spec2), (spec1.et(spec2)).non(), (b1, b2) -> b1 && b2, ShortCut.AND);
+        }
+    }
+
+    static class Non<U> extends SpecificationCombinee<U> {
+
+        public Non(@NonNull final Specification<U> spec1) {
+            super(spec1, toujoursVrai, (b1, b2) -> !b1, ShortCut.UNARY);
+        }
+
     }
 }

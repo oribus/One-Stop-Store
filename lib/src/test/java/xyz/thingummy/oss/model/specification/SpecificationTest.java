@@ -31,14 +31,14 @@ import org.junit.jupiter.api.Test;
 import xyz.thingummy.oss.commons.notification.CollecteurNotifications;
 import xyz.thingummy.oss.commons.notification.Message;
 import xyz.thingummy.oss.commons.notification.TypeMessage;
+import xyz.thingummy.oss.commons.validation.ShortCut;
 
 import java.util.function.Predicate;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static xyz.thingummy.oss.commons.notification.CollecteurNotifications.ERREUR;
-import static xyz.thingummy.oss.commons.notification.CollecteurNotifications.contientMessage;
-import static xyz.thingummy.oss.model.specification.SpecificationTest.Constantes.*;
 import static xyz.thingummy.oss.model.specification.SpecificationOperations.*;
+import static xyz.thingummy.oss.model.specification.SpecificationTest.Constantes.*;
 
 class SpecificationTest {
     public static final Predicate<String> COMMENCE_PAR_A = s -> s.startsWith("a");
@@ -66,18 +66,22 @@ class SpecificationTest {
 
     public static final Specification<String> CONTIENT_A_ET_PLUS_DE_CINQ_CARACTERES_2 = CONTIENT_A.combiner(CONTIENT_PLUS_DE_CINQ_CARACTERES, Boolean::logicalAnd, ShortCut.NONE);
 
-    private static boolean contientUnMessage( Specification<String> specification) {
+    private static boolean contientUnMessage(Specification<String> specification) {
         return specification.getMessage().isPresent();
     }
-    private static boolean contientUnMessageAdditionnel( Specification<String> specification) {
+
+    private static boolean contientUnMessageAdditionnel(Specification<String> specification) {
         return specification.getMessageAdditionnel().isPresent();
     }
+
     private static boolean contientCeMessage(Specification<String> specification, Message message) {
         return specification.getMessage().filter(Predicate.isEqual(message)).isPresent();
     }
+
     private static boolean contientCeMessageAdditionnel(Specification<String> specification, Message message) {
         return specification.getMessageAdditionnel().filter(Predicate.isEqual(message)).isPresent();
     }
+
     /**
      * Teste la méthode avec.
      * Vérifie que le message est correctement associé à la spécification et est récupérable.
@@ -87,7 +91,7 @@ class SpecificationTest {
         assertFalse(contientUnMessage(CONTIENT_PLUS_DE_TROIS_CARACTERES));
         final Specification<String> avecMessage = CONTIENT_PLUS_DE_TROIS_CARACTERES.avec(MESSAGE_DE_TEST);
         assertTrue(contientUnMessage(avecMessage));
-        assertTrue(contientCeMessage(avecMessage,MESSAGE_DE_TEST));
+        assertTrue(contientCeMessage(avecMessage, MESSAGE_DE_TEST));
         assertTrue(avecMessage.estSatisfaitePar(TEST));
         assertFalse(avecMessage.estSatisfaitePar(OUI));
     }
@@ -103,6 +107,7 @@ class SpecificationTest {
         assertTrue(contientUnMessage(avecMessageAdditionnel));
         assertTrue(contientUnMessageAdditionnel(avecMessageAdditionnel));
     }
+
     @Test
     void test_sansMessage() {
         final Specification<String> avecMessage = CONTIENT_PLUS_DE_TROIS_CARACTERES.avec(MESSAGE_DE_TEST);
@@ -114,20 +119,21 @@ class SpecificationTest {
     void test_Avec2() {
         final Specification<String> avecMessage = CONTIENT_PLUS_DE_TROIS_CARACTERES.avec(MESSAGE_DE_TEST);
         assertTrue(contientUnMessage(avecMessage));
-        assertTrue(contientCeMessage(avecMessage,MESSAGE_DE_TEST));
+        assertTrue(contientCeMessage(avecMessage, MESSAGE_DE_TEST));
         final Specification<String> avecMessage2 = avecMessage.avec(MESSAGE_DE_TEST_2);
         assertTrue(contientUnMessage(avecMessage2));
-        assertTrue(contientCeMessage(avecMessage2,MESSAGE_DE_TEST_2));
+        assertTrue(contientCeMessage(avecMessage2, MESSAGE_DE_TEST_2));
         assertFalse(contientUnMessage(avecMessage2.sansMessage()));
     }
+
     @Test
     void test_Avec_MessageAdditionnel2() {
         final Specification<String> avecMessageAdditionnel = CONTIENT_PLUS_DE_TROIS_CARACTERES.avec(MESSAGE_DE_TEST, MESSAGE_DE_TEST_2);
         assertTrue(contientUnMessage(avecMessageAdditionnel));
         assertTrue(contientUnMessageAdditionnel(avecMessageAdditionnel));
         final Specification<String> avecMessageAdditionnel2 = avecMessageAdditionnel.avec(MESSAGE_DE_TEST_3, MESSAGE_DE_TEST_4);
-        assertTrue(contientCeMessage(avecMessageAdditionnel2,MESSAGE_DE_TEST_3));
-        assertTrue(contientCeMessageAdditionnel(avecMessageAdditionnel2,MESSAGE_DE_TEST_4));
+        assertTrue(contientCeMessage(avecMessageAdditionnel2, MESSAGE_DE_TEST_3));
+        assertTrue(contientCeMessageAdditionnel(avecMessageAdditionnel2, MESSAGE_DE_TEST_4));
         assertFalse(contientUnMessage(avecMessageAdditionnel2.sansMessage()));
     }
 
@@ -140,9 +146,9 @@ class SpecificationTest {
         assertFalse(CONTIENT_A_ET_PLUS_DE_CINQ_CARACTERES.estSatisfaitePar(HELLO));
         assertTrue(CONTIENT_A_ET_PLUS_DE_CINQ_CARACTERES_2.estSatisfaitePar(ABRACADABRA));
         assertFalse(CONTIENT_A_ET_PLUS_DE_CINQ_CARACTERES_2.estSatisfaitePar(ACT));
-        assertFalse(avecMessage.estSatisfaitePar(HELLO,c));
+        assertFalse(avecMessage.estSatisfaitePar(HELLO, c));
         assertTrue(contientUnMessage(avecMessage));
-        assertTrue(contientCeMessage(avecMessage,MESSAGE_DE_TEST));
+        assertTrue(contientCeMessage(avecMessage, MESSAGE_DE_TEST));
     }
 
     @Test
@@ -193,7 +199,7 @@ class SpecificationTest {
         assertFalse(contientPlusDeTroisCaracteresEtNeContientPasA.estSatisfaitePar(OUI, c));
         assertTrue(c.hasNotifications());
         assertEquals(1, c.denombrerNotifications(ERREUR));
-        assertEquals(1, c.denombrerNotifications(contientMessage(MESSAGE_DE_TEST)));
+        assertEquals(1, c.denombrerNotifications(CollecteurNotifications.contientMessage(MESSAGE_DE_TEST)));
     }
 
     @Test
@@ -208,8 +214,8 @@ class SpecificationTest {
         assertFalse(contientPlusDeTroisCaracteresOuContientA.estSatisfaitePar(OUI, c));
         assertTrue(c.hasNotifications());
         assertEquals(2, c.denombrerNotifications(ERREUR));
-        assertEquals(1, c.denombrerNotifications(contientMessage(MESSAGE_DE_TEST)));
-        assertEquals(1, c.denombrerNotifications(contientMessage(MESSAGE_DE_TEST_2)));
+        assertEquals(1, c.denombrerNotifications(CollecteurNotifications.contientMessage(MESSAGE_DE_TEST)));
+        assertEquals(1, c.denombrerNotifications(CollecteurNotifications.contientMessage(MESSAGE_DE_TEST_2)));
     }
 
     /**
@@ -298,14 +304,14 @@ class SpecificationTest {
         assertFalse(CONTIENT_A_OUX_PLUS_DE_QUATRE_CARACTERES.estSatisfaitePar(ABRACADABRA, collecteur));
         assertTrue(collecteur.hasNotifications());
         assertEquals(1, collecteur.denombrerNotifications(ERREUR));
-        assertEquals(1, collecteur.denombrerNotifications(contientMessage(MESSAGE_DE_TEST_4)));
+        assertEquals(1, collecteur.denombrerNotifications(CollecteurNotifications.contientMessage(MESSAGE_DE_TEST_4)));
         collecteur.vider();
         assertFalse(CONTIENT_A_OUX_PLUS_DE_QUATRE_CARACTERES.estSatisfaitePar(OUI, collecteur));
         assertTrue(collecteur.hasNotifications());
         assertEquals(3, collecteur.denombrerNotifications(ERREUR));
-        assertEquals(1, collecteur.denombrerNotifications(contientMessage(PLUS_DE_QUATRE_CARACTERES_KO)));
-        assertEquals(1, collecteur.denombrerNotifications(contientMessage(CONTIENT_A_KO)));
-        assertEquals(1, collecteur.denombrerNotifications(contientMessage(MESSAGE_DE_TEST_3)));
+        assertEquals(1, collecteur.denombrerNotifications(CollecteurNotifications.contientMessage(PLUS_DE_QUATRE_CARACTERES_KO)));
+        assertEquals(1, collecteur.denombrerNotifications(CollecteurNotifications.contientMessage(CONTIENT_A_KO)));
+        assertEquals(1, collecteur.denombrerNotifications(CollecteurNotifications.contientMessage(MESSAGE_DE_TEST_3)));
 
     }
 

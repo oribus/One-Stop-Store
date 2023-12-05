@@ -27,13 +27,25 @@
 package xyz.thingummy.oss.model.specification;
 
 import lombok.NonNull;
-import xyz.thingummy.oss.commons.notification.CollecteurNotifications;
 
-class Ou<T> extends SpecificationCombinee<T> {
-    boolean excl;
+import java.util.function.BiPredicate;
+import java.util.function.Predicate;
 
-    public Ou(@NonNull final Specification<T> spec1, @NonNull final Specification<? super T> spec2) {
-        super(spec1, spec2, (b1, b2) -> b1 || b2, ShortCut.OR);
+
+@FunctionalInterface
+public interface Predicat2<T,U> extends BiPredicate<T,U> {
+
+    default boolean tester(T t, U u) {return test(t,u);  }
+
+    default Predicat2<T, U> et(BiPredicate<? super T, ? super U> other) {
+        return BiPredicate.super.and(other)::test;
     }
 
+    default Predicat2<T, U> non() {
+        return BiPredicate.super.negate()::test;
+    }
+
+    default Predicat2<T, U> ou(BiPredicate<? super T, ? super U> other) {
+        return BiPredicate.super.or(other)::test;
+    }
 }

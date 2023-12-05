@@ -26,6 +26,3 @@
 
 package xyz.thingummy.oss.model.specification;
 
-public enum ShortCut {
-    AND, OR, NONE, UNARY
-}
