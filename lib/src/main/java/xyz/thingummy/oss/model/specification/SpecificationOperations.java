@@ -37,15 +37,11 @@ import java.util.function.Predicate;
 
 public class SpecificationOperations {
 
-    public static <T> Specification<T> avec(@NonNull final Specification<T> specification, @NonNull final Message message) {
-        return specification.avec(message);
-    }
-
     public static <T> Specification<T> soit(@NonNull final Specification<T> specification) {
         return specification;
     }
 
-    public static <T, U> Specification<T> soit(@NonNull final Function<T, U> extracteur, @NonNull final Predicate<U> predicat) {
+    public static <T, U> Specification<T> soit( @NonNull final Predicate<U> predicat,@NonNull final Function<T, U> extracteur) {
         return soit(predicat).transformer(extracteur);
     }
 
@@ -53,7 +49,7 @@ public class SpecificationOperations {
         return (predicat instanceof Specification) ? (Specification<T>) predicat : predicat::test;
     }
 
-    public static <T, U> Specification<T> soit(@NonNull final Function<T, U> extracteur, final Specification<U> specification) {
+    public static <T, U> Specification<T> soit(final Specification<U> specification,@NonNull final Function<T, U> extracteur) {
         return specification.transformer(extracteur);
     }
 

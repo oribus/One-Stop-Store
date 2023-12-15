@@ -1,137 +1,116 @@
 package xyz.thingummy.oss.commons.validation;
 
+import lombok.AccessLevel;
+import lombok.AllArgsConstructor;
+import lombok.Getter;
 import lombok.NonNull;
+import xyz.thingummy.oss.commons.notification.CollecteurNotifications;
 import xyz.thingummy.oss.commons.notification.Message;
 import xyz.thingummy.oss.model.specification.Specification;
 import xyz.thingummy.oss.model.specification.SpecificationCombinee;
-import xyz.thingummy.oss.model.specification.Specifications;
+import xyz.thingummy.oss.model.specification.Specifications0;
 
+import java.util.Optional;
 import java.util.function.BinaryOperator;
 import java.util.function.Function;
 
+import static xyz.thingummy.oss.commons.validation.ValidationCombinee.*;
+import static xyz.thingummy.oss.commons.validation.ValidationOperations.soit;
 
-public interface Validation<T> extends Specification<T> {
-    /*  protected Validation(@NonNull Specification<T> specification, final Message message, final Message messageAdditionnel) {
-          if (specification instanceof Validation<T> validation) {
-              this.specification = validation.specification;
-          } else {
-              this.specification = specification;
-          }
-          this.message = message;
-          this.messageAdditionnel = messageAdditionnel;
-      } */
 
-    static <T> Validation<T> soit(@NonNull Specification<T> specification) {
-        return soit(specification, null, null);
-    }
+@AllArgsConstructor(access = AccessLevel.PROTECTED)
+public abstract class Validation<T> implements Specification<T> {
+    @NonNull
+    @Getter
+    protected Specification<T> specification;
+    protected Message message;
+    protected Message messageAdditionnel;
 
-    static <T> Validation<T> soit(@NonNull Validation<T> validation) {
-        return validation;
-    }
+    public abstract Validation<T> avec(final Message message);
 
-    static <T> Validation<T> soit(@NonNull Specification<T> specification, final Message message) {
-        return soit(specification, message, null);
-    }
+    public abstract Validation<T> avec(final Message message, final Message messageAdditionnel);
 
-    static <T> Validation<T> soit(@NonNull Specification<T> specification, final Message message, final Message messageAdditionnel) {
-        Specification<T> specificationSimple = (specification instanceof Validation<T> validation) ? validation.getSpecification() : specification;
-        return new Validation<T>() {
-            public Specification<T> getSpecification() {
-                return specificationSimple;
-            }
-
-            public Message getMessage() {
-                return message;
-            }
-
-            public Message getMessageAdditionnel() {
-                return messageAdditionnel;
-            }
-
-        };
-    }
-
-    Message getMessageAdditionnel();
-
-    Specification<T> getSpecification();
-
-    Message getMessage();
+    public abstract Validation<T> sansMessage();
 
     @Override
-    default boolean test(T t) {
-        return getSpecification().test(t);
-    }
-
-    default Validation<T> avec(final Message m) {
-        return soit(getSpecification(), m, null);
-    }
-
-    default Validation<T> avec(final Message message, final Message messageAdditionnel) {
-        return soit(getSpecification(), message, messageAdditionnel);
-    }
-
-   /* @Override
-    public Validation<T> combiner(Specification<? super T> spec, @NonNull BinaryOperator<Boolean> operateur) {
-        return soit(this, soit(spec), operateur, SpecificationCombinee.ShortCut.NONE);
-    }*/
-
-    @Override
-    default Specifications.Specifications0 differer(T t) {
-        return getSpecification().differer(t);
+    public boolean test(final T t) {
+        return specification.test(t);
     }
 
     @Override
-    default boolean estSatisfaitePar(T t) {
-        return getSpecification().estSatisfaitePar(t);
+    public boolean tester(final T t) {
+        return specification.tester(t);
     }
 
     @Override
-    default Validation<T> etPas(@NonNull Specification<? super T> autre) {
+    public Validation<T> combiner(final Specification<? super T> spec2, @NonNull final BinaryOperator<Boolean> operateur) {
+        return combiner(spec2, operateur, SpecificationCombinee.ShortCut.NONE);
+    }
+
+    @Override
+    public Specifications0 differer(final T t) {
+        return specification.differer(t);
+    }
+
+    @Override
+    public boolean estSatisfaitePar(final T t) {
+        return specification.estSatisfaitePar(t);
+    }
+
+    public abstract boolean estSatisfaitePar(T t, CollecteurNotifications collecteur);
+
+    @Override
+    public Validation<T> etPas(@NonNull final Specification<? super T> autre) {
         return etNon(autre);
     }
 
     @Override
-    default Validation<T> etNon(@NonNull Specification<? super T> autre) {
-        return this.et(autre.non());
+    public Validation<T> etNon(@NonNull final Specification<? super T> autre) {
+        return et(autre.non());
     }
 
     @Override
-    default Validation<T> et(@NonNull Specification<? super T> autre) {
-        return new ValidationCombinee.Et<>(this, soit(autre));
+    public Validation<T> et(@NonNull final Specification<? super T> autre) {
+        return new Et<>(this, soit(autre));
     }
 
     @Override
-    default Validation<T> non() {
-        return new ValidationCombinee.Non<>(this);
+    public Validation<T> non() {
+        return new Non<>(this);
     }
 
     @Override
-    default Validation<T> combiner(Specification<? super T> spec2, @NonNull BinaryOperator<Boolean> operateur, @NonNull SpecificationCombinee.ShortCut shortCut) {
-        return new ValidationCombinee<>(this, soit(spec2), operateur, shortcut, null, null);
+    public Validation<T> combiner(final Specification<? super T> spec2, @NonNull final BinaryOperator<Boolean> operateur,
+                                  final SpecificationCombinee.@NonNull ShortCut shortCut) {
+        return new ValidationCombinee<>(soit(this), soit(spec2), operateur, shortCut, null, null);
     }
 
     @Override
-    default Validation<T> ni(@NonNull Specification<? super T> autre) {
+    public Validation<T> ni(@NonNull final Specification<? super T> autre) {
         return etNon(autre);
     }
 
     @Override
-    default Validation<T> ou(@NonNull Specification<? super T> autre) {
-        return new ValidationCombinee.Ou<>(this, soit(autre));
+    public Validation<T> ou(@NonNull final Specification<? super T> autre) {
+        return new Ou<>(this, soit(autre));
     }
 
     @Override
-    default Validation<T> ouX(@NonNull Specification<? super T> autre) {
-        return new ValidationCombinee.OuX<>(this, soit(autre));
+    public Validation<T> ouX(@NonNull final Specification<? super T> autre) {
+        return new OuX<>(this, soit(autre));
     }
 
     @Override
-    default <U> Validation<U> transformer(@NonNull Function<U, T> fonctionTransformation) {
-        return soit(getSpecification().transformer(fonctionTransformation), getMessage(), getMessageAdditionnel());
+    public <U> Validation<U> transformer(@NonNull final Function<U, T> fonctionTransformation) {
+        return new ValidationSimple<>(specification.transformer(fonctionTransformation));
     }
 
-    default Validation<T> sansMessage() {
-        return soit(getSpecification(), null, null);
+    public Optional<Message> getMessage() {
+        return Optional.ofNullable(message);
+    }
+
+    public Optional<Message> getMessageAdditionnel() {
+        return Optional.ofNullable(messageAdditionnel);
     }
 
 }

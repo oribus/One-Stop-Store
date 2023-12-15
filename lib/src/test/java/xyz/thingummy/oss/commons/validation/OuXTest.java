@@ -25,14 +25,32 @@
  *
  */
 
-package xyz.thingummy.oss.model.specification;
+package xyz.thingummy.oss.commons.validation;
 
-import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertTrue;
-import static xyz.thingummy.oss.model.specification.SpecificationOperations.soit;
+import xyz.thingummy.oss.model.specification.SimpleTestSpecifications;
 
-public class SpecificationTest implements SpecificationBaseTest {
+import static xyz.thingummy.oss.commons.validation.ValidationCombinee.OuX;
+import static xyz.thingummy.oss.commons.validation.ValidationOperations.soit;
+import static xyz.thingummy.oss.model.specification.Specifications.toujoursFaux;
 
+public class OuXTest implements ValidationBaseTest {
+
+
+    @Override
+    public Validation<String> commenceParA() {
+        return new OuX<>(soit(toujoursFaux()), soit(SimpleTestSpecifications.commenceParA()));
+    }
+
+
+    @Override
+    public Validation<String> finiParA() {
+        return new OuX<>(soit(toujoursFaux()), soit(SimpleTestSpecifications.finiParA()));
+    }
+
+    @Override
+    public Validation<Integer> supperieurA4() {
+        return new OuX<>(soit(toujoursFaux()), soit(SimpleTestSpecifications.supperieurA4()));
+    }
 
 
 }

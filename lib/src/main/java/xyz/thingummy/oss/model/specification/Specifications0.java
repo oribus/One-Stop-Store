@@ -27,12 +27,22 @@
 
 package xyz.thingummy.oss.model.specification;
 
-import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertTrue;
-import static xyz.thingummy.oss.model.specification.SpecificationOperations.soit;
+import java.util.function.BooleanSupplier;
 
-public class SpecificationTest implements SpecificationBaseTest {
+@FunctionalInterface
+public interface Specifications0<T> extends BooleanSupplier, Specification<T> {
 
+    @Override
+    default boolean test(final Object o) {
+        return estSatisfaite();
+    }
 
+    boolean estSatisfaite();
 
+    @Override
+    default boolean getAsBoolean() {
+        return estSatisfaite();
+    }
 }
+
+    

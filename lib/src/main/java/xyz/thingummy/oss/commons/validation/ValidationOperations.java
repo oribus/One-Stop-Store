@@ -1,5 +1,4 @@
 /*
- *
  * The MIT License (MIT)
  *
  * Copyright (c) 2023, Jérôme ROBERT
@@ -25,14 +24,28 @@
  *
  */
 
-package xyz.thingummy.oss.model.specification;
+package xyz.thingummy.oss.commons.validation;
 
-import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertTrue;
-import static xyz.thingummy.oss.model.specification.SpecificationOperations.soit;
+import lombok.NonNull;
+import xyz.thingummy.oss.commons.notification.Message;
+import xyz.thingummy.oss.model.specification.Specification;
 
-public class SpecificationTest implements SpecificationBaseTest {
+public class ValidationOperations {
 
+    public static <T> Validation<T> soit(@NonNull final Specification<T> specification) {
+        return (specification instanceof final Validation<T> validation) ? soit(validation) : new ValidationSimple<>(specification);
+    }
 
+    public static <T> Validation<T> soit(@NonNull final Validation<T> validation) {
+        return validation;
+    }
+
+    public static <T> Validation<T> avec(@NonNull final Specification<T> specification, final Message message) {
+        return soit(specification).avec(message);
+    }
+
+    public static <T> Validation<T> avec(@NonNull final Specification<T> specification, final Message message, final Message messageAdditionnel) {
+        return soit(specification).avec(message, messageAdditionnel);
+    }
 
 }

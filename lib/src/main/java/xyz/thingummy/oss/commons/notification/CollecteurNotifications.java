@@ -40,21 +40,8 @@ import java.util.stream.Collectors;
  * par exemple un processus de validation.
  */
 public class CollecteurNotifications {
-    // Prédicats pour filtrer les notifications par criticité.
-    public static final Predicate<Notification<?, ?>> CRITIQUE = n -> n.getTypeMessage() == TypeMessage.CRITIQUE;
-    public static final Predicate<Notification<?, ?>> ERREUR = n -> n.getTypeMessage() == TypeMessage.ERREUR;
-    public static final Predicate<Notification<?, ?>> AVERTISSEMENT = n -> n.getTypeMessage() == TypeMessage.AVERTISSEMENT;
-    public static final Predicate<Notification<?, ?>> INFORMATION = n -> n.getTypeMessage() == TypeMessage.INFORMATION;
-    public static final Predicate<Notification<?, ?>> CONFIRMATION = n -> n.getTypeMessage() == TypeMessage.CONFIRMATION;
     private final Set<Notification<?, ?>> notifications = ConcurrentHashMap.newKeySet();
 
-    public static Predicate<Notification<?, ?>> contientMessage(final Message message) {
-        return n -> n.getMessage().equals(message);
-    }
-
-    public static Predicate<Notification<?, ?>> contientClefMessage(final String clef) {
-        return n -> n.getMessage().getKey().equals(clef);
-    }
 
     /**
      * Ajoute une entrée de notification au collecteur.
@@ -77,8 +64,8 @@ public class CollecteurNotifications {
      * @param critere Le critère de filtrage des notifications.
      * @return Une liste de notifications correspondant au critère.
      */
-    public List<Notification<?, ?>> filtrer(final Predicate<Notification<?, ?>> critere) {
-        return notifications.stream().filter(critere).collect(Collectors.toList());
+    public Set<Notification<?, ?>> filtrer(final Predicate<Notification<?, ?>> critere) {
+        return notifications.stream().filter(critere).collect(Collectors.toUnmodifiableSet());
     }
 
     /**
@@ -112,18 +99,18 @@ public class CollecteurNotifications {
      *
      * @return Une liste non modifiable d'entrées de notification.
      */
-    public List<Notification<?, ?>> getNotifications() {
-        return Collections.unmodifiableList(notifications);
+    public Set<Notification<?, ?>> getNotifications() {
+        return Collections.unmodifiableSet(notifications);
     }
 
     public Map<TypeMessage, List<Notification<?, ?>>> getNotificationsParTypeMessage() {
         return notifications.stream()
-                .collect(Collectors.groupingBy(Notification::getTypeMessage));
+                .collect(Collectors.groupingBy(n -> n.getMessage().getType()));
     }
 
     public Map<TypeMessage, Long> denombrerNotifications() {
         return notifications.stream()
-                .collect(Collectors.groupingBy(Notification::getTypeMessage, Collectors.counting()));
+                .collect(Collectors.groupingBy(n -> n.getMessage().getType(), Collectors.counting()));
     }
 
     public long denombrerNotifications(final Predicate<Notification<?, ?>> critere) {

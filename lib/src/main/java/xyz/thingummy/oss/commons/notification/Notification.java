@@ -25,8 +25,12 @@
  */
 package xyz.thingummy.oss.commons.notification;
 
-import lombok.AllArgsConstructor;
-import lombok.Getter;
+import lombok.*;
+
+import java.io.Serializable;
+import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.function.Predicate;
 
 /**
  * Représente une notification, conçue pour exprimer le fait qu'une source souhaite communiquer
@@ -41,13 +45,30 @@ import lombok.Getter;
  * @param <S> Le type de la source ayant généré la notification.
  */
 @Getter
+@ToString
+@EqualsAndHashCode
 @AllArgsConstructor
-public class Notification<T, S> {
+public class Notification<T, S> implements Serializable {
+    @NonNull
     private Message message;
-    private S source;
+    @EqualsAndHashCode.Exclude private S source;
     private T reference;
     private String tag;
 
+    public static final Predicate<Notification<?, ?>> CRITIQUE = n -> n.message.getType() == TypeMessage.CRITIQUE;
+    public static final Predicate<Notification<?, ?>> ERREUR = n -> n.message.getType() == TypeMessage.ERREUR;
+    public static final Predicate<Notification<?, ?>> AVERTISSEMENT = n -> n.message.getType() == TypeMessage.AVERTISSEMENT;
+    public static final Predicate<Notification<?, ?>> INFORMATION = n -> n.message.getType() == TypeMessage.INFORMATION;
+    public static final Predicate<Notification<?, ?>> CONFIRMATION = n -> n.message.getType() == TypeMessage.CONFIRMATION;
+
+
+    public static Predicate<Notification<?, ?>> contientMessage(final Message message) {
+        return n -> n.getMessage().equals(message);
+    }
+
+    public static Predicate<Notification<?, ?>> contientClefMessage(final String clef) {
+        return n -> n.getMessage().getKey().equals(clef);
+    }
     /**
      * Constructeur pour créer une notification sans tag.
      *
@@ -57,9 +78,5 @@ public class Notification<T, S> {
      */
     public Notification(Message message, S source, T reference) {
         this(message, source, reference, null);
-    }
-
-    public @lombok.NonNull TypeMessage getTypeMessage() {
-        return this.message.getType();
     }
 }

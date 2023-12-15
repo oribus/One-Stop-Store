@@ -30,6 +30,7 @@ import lombok.*;
 import xyz.thingummy.oss.commons.Localizable;
 import xyz.thingummy.oss.model.ValueObject;
 
+import java.io.Serializable;
 import java.util.Optional;
 
 /**
@@ -45,7 +46,7 @@ import java.util.Optional;
 @ToString
 @EqualsAndHashCode
 @RequiredArgsConstructor(access = lombok.AccessLevel.PROTECTED)
-public class Message implements ValueObject<Message>, Localizable {
+public class Message implements ValueObject<Message>, Localizable, Serializable {
 
     /**
      * La clé utilisée pour récupérer le message localisé. Cette clé est essentielle et ne peut pas être nulle.
@@ -56,7 +57,7 @@ public class Message implements ValueObject<Message>, Localizable {
     /**
      * Un message par défaut optionnel fourni comme solution de repli si la clé n'est pas trouvée dans le paquet de ressources.
      */
-    private final String defaultMessage;
+    @EqualsAndHashCode.Exclude private final String defaultMessage;
 
     /**
      * Le type de la notification, indiquant sa nature et son importance.

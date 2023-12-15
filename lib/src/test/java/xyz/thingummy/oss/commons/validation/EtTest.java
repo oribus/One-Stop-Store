@@ -25,14 +25,33 @@
  *
  */
 
-package xyz.thingummy.oss.model.specification;
+package xyz.thingummy.oss.commons.validation;
 
-import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertTrue;
-import static xyz.thingummy.oss.model.specification.SpecificationOperations.soit;
+import xyz.thingummy.oss.model.specification.SimpleTestSpecifications;
 
-public class SpecificationTest implements SpecificationBaseTest {
+import static xyz.thingummy.oss.commons.validation.ValidationCombinee.Et;
+import static xyz.thingummy.oss.commons.validation.ValidationOperations.soit;
+import static xyz.thingummy.oss.model.specification.Specifications.toujoursVrai;
 
+public class EtTest implements ValidationBaseTest {
+
+
+    @Override
+    public Validation<String> commenceParA() {
+        return new ValidationCombinee.Et<>(soit(SimpleTestSpecifications.commenceParA()),
+                soit(toujoursVrai));
+    }
+
+
+    @Override
+    public Validation<String> finiParA() {
+        return new Et<>(soit(SimpleTestSpecifications.finiParA()), soit(toujoursVrai));
+    }
+
+    @Override
+    public Validation<Integer> supperieurA4() {
+        return new Et<>(soit(SimpleTestSpecifications.supperieurA4()), soit(toujoursVrai));
+    }
 
 
 }

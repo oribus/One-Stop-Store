@@ -1,4 +1,5 @@
 /*
+ *
  * The MIT License (MIT)
  *
  * Copyright (c) 2023, Jérôme ROBERT
@@ -24,5 +25,36 @@
  *
  */
 
-package xyz.thingummy.oss.model.specification;
+package xyz.thingummy.oss.commons.validation;
 
+import xyz.thingummy.oss.model.specification.SimpleTestSpecifications;
+import xyz.thingummy.oss.model.specification.SpecificationCombinee;
+import xyz.thingummy.oss.model.specification.Specifications;
+
+import static xyz.thingummy.oss.commons.validation.ValidationOperations.soit;
+
+public class ValidationCombineeTest implements ValidationBaseTest {
+
+    private static <T> ValidationCombinee<T> identite(final Validation<T> validation) {
+        return new ValidationCombinee<>(validation, soit(Specifications.toujoursVrai),
+                (b1, b2) -> b1, SpecificationCombinee.ShortCut.UNARY, null, null);
+    }
+
+    @Override
+    public Validation<String> commenceParA() {
+        return identite(soit(SimpleTestSpecifications.commenceParA()));
+    }
+
+
+    @Override
+    public Validation<String> finiParA() {
+        return identite(soit(SimpleTestSpecifications.finiParA()));
+    }
+
+    @Override
+    public Validation<Integer> supperieurA4() {
+        return identite(soit(SimpleTestSpecifications.supperieurA4()));
+    }
+
+
+}

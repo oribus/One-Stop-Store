@@ -27,12 +27,28 @@
 
 package xyz.thingummy.oss.model.specification;
 
-import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertTrue;
-import static xyz.thingummy.oss.model.specification.SpecificationOperations.soit;
+public interface SimpleTestSpecifications {
+    static Specification<String> commenceParA() {
+        return s -> s.startsWith("a");
+    }
 
-public class SpecificationTest implements SpecificationBaseTest {
+    static Specification<String> finiParA() {
+        return s -> s.endsWith("a");
+    }
 
+    static Specification<Integer> supperieurA4() {
+        return i -> i > 4;
+    }
 
+    static Specification<String> neCommencePasParA() {
+        return s -> !s.startsWith("a");
+    }
 
+    static Specification<String> neFiniPasParA() {
+        return s -> !s.endsWith("a");
+    }
+
+    static Specification<Integer> pasSupperieurA4() {
+        return i -> !(i > 4);
+    }
 }

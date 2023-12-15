@@ -27,77 +27,17 @@
 
 package xyz.thingummy.oss.model.specification;
 
-import org.junit.jupiter.api.Test;
-import xyz.thingummy.oss.model.specification.Predicat;
-
-import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertTrue;
-
-class PredicatTest {
-
-    /**
-     * Prédicat vérifiant si un entier est strictement positif.
-     */
-    private final Predicat<Integer> estStrictementPositif = t -> t > 0;
-
-    /**
-     * Prédicat vérifiant si un entier est pair.
-     */
-    private final Predicat<Integer> estPair = t -> t % 2 == 0;
-
-    /**
-     * Test la méthode `tester` qui évalue
-     */
-    @Test
-    void test_tester() {
-
+public class PredicatTest implements PredicatBaseTest {
+    @Override
+    public Predicat<String> commenceParA() {
+        return s -> s.startsWith("a");
     }
 
-    /**
-     * Teste la méthode `et` qui combine deux prédicats en utilisant une opération logique ET.
-     * Le prédicat résultant doit retourner vrai uniquement si les deux prédicats initiaux sont vrais.
-     */
-    @Test
-    void test_et() {
-        // when
-        final Predicat<Integer> estPairEtStrictementPositif = estStrictementPositif.et(estPair);
-
-        // Vérification du comportement du prédicat.
-        assertTrue(estPairEtStrictementPositif.tester(2));
-        assertFalse(estPairEtStrictementPositif.tester(-2));
-        assertFalse(estPairEtStrictementPositif.tester(1));
+    public Predicat<String> finiParA() {
+        return s-> s.endsWith("a");
     }
 
-    /**
-     * Teste la méthode `ou` qui combine deux prédicats en utilisant une opération logique OU.
-     * Le prédicat résultant doit retourner vrai si au moins un des deux prédicats initiaux est vrai.
-     */
-    @Test
-    void test_ou() {
-        // when
-        final Predicat<Integer> estPairOuStrictementPositif = estStrictementPositif.ou(estPair);
-
-        // Vérification du comportement du prédicat.
-        assertTrue(estPairOuStrictementPositif.tester(2));
-        assertFalse(estPairOuStrictementPositif.tester(-1));
-        assertTrue(estPairOuStrictementPositif.tester(1));
-    }
-
-    /**
-     * Teste la méthode `non` qui inverse le résultat d'un prédicat.
-     * Le prédicat résultant doit retourner vrai si le prédicat initial est faux, et vice-versa.
-     */
-    @Test
-    void test_non() {
-        // Construction du prédicat estImpair par négation du prédicat estPair.
-        final Predicat<Integer> estImpair = estPair.non();
-        // Vérification du comportement du prédicat.
-        assertFalse(estImpair.tester(2));
-        assertTrue(estImpair.tester(1));
-    }
-
+    public Predicat<Integer> supperieurA4() {
+        return i -> i > 4;
+    };
 }
-
-
-
-

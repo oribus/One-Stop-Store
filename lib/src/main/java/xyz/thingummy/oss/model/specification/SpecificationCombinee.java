@@ -56,7 +56,7 @@ public class SpecificationCombinee<T> implements Specification<T> {
         };
     }
 
-    public static enum ShortCut {
+    public enum ShortCut {
         AND, OR, NONE, UNARY
     }
 

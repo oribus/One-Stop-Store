@@ -31,8 +31,6 @@ import lombok.NonNull;
 import java.util.function.BinaryOperator;
 import java.util.function.Function;
 
-import static xyz.thingummy.oss.model.specification.Specifications.Specifications0;
-
 /**
  * Interface Specification - représente une spécification selon acception du terme dans le contexte du
  * Design (conception) Dirigé par le Domaine (DDD Domain Driven Design).
@@ -107,6 +105,5 @@ public interface Specification<T> extends Predicat<T> {
     default <U> Specification<U> transformer(@NonNull final Function<U, T> fonctionTransformation) {
         return (U u) -> this.estSatisfaitePar(fonctionTransformation.apply(u));
     }
-
 
 }

@@ -25,14 +25,28 @@
  *
  */
 
-package xyz.thingummy.oss.model.specification;
+package xyz.thingummy.oss.commons.validation;
 
-import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertTrue;
-import static xyz.thingummy.oss.model.specification.SpecificationOperations.soit;
+import lombok.NonNull;
+import xyz.thingummy.oss.commons.notification.Message;
+import xyz.thingummy.oss.model.specification.Specification;
 
-public class SpecificationTest implements SpecificationBaseTest {
+class ValidationSimple<T> extends Validation<T> {
 
+        protected ValidationSimple(@NonNull Specification<T> specification, Message message, Message messageAdditionnel) {
+            super(specification, message, messageAdditionnel);
+        }
 
-
-}
+        @Override
+        public Validation<T> avec(final Message message) {
+            return new ValidationSimple<>(specification, message, null);
+        }
+        @Override
+        public Validation<T> avec(final Message message,final Message messageAdditionnel) {
+            return new ValidationSimple<>(specification, message, messageAdditionnel);
+        }
+        @Override
+        public Validation<T> sansMessage() {
+            return new ValidationSimple<>(specification, null, null);
+        }
+    }

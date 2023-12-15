@@ -1,4 +1,5 @@
 /*
+ *
  * The MIT License (MIT)
  *
  * Copyright (c) 2023, Jérôme ROBERT
@@ -24,28 +25,31 @@
  *
  */
 
-package xyz.thingummy.oss.model.specification;
+package xyz.thingummy.oss.commons.validation;
 
-import lombok.NonNull;
+import xyz.thingummy.oss.model.specification.SimpleTestSpecifications;
 
-import java.util.function.BiPredicate;
-import java.util.function.Predicate;
+import static xyz.thingummy.oss.commons.validation.ValidationCombinee.Non;
+import static xyz.thingummy.oss.commons.validation.ValidationOperations.soit;
+
+public class NonTest implements ValidationBaseTest {
 
 
-@FunctionalInterface
-public interface Predicat2<T,U> extends BiPredicate<T,U> {
-
-    default boolean tester(T t, U u) {return test(t,u);  }
-
-    default Predicat2<T, U> et(BiPredicate<? super T, ? super U> other) {
-        return BiPredicate.super.and(other)::test;
+    @Override
+    public Validation<String> commenceParA() {
+        return new Non<>(soit(SimpleTestSpecifications.neCommencePasParA()));
     }
 
-    default Predicat2<T, U> non() {
-        return BiPredicate.super.negate()::test;
+
+    @Override
+    public Validation<String> finiParA() {
+        return new Non<>(soit(SimpleTestSpecifications.neFiniPasParA()));
     }
 
-    default Predicat2<T, U> ou(BiPredicate<? super T, ? super U> other) {
-        return BiPredicate.super.or(other)::test;
+    @Override
+    public Validation<Integer> supperieurA4() {
+        return new Non<>(soit(SimpleTestSpecifications.pasSupperieurA4()));
     }
+
+
 }
